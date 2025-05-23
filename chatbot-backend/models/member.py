@@ -1,24 +1,14 @@
+from sqlmodel import SQLModel, Field
 from typing import Optional
-from sqlmodel import SQLModel, Field, Enum
-import enum
-from datetime import datetime
+from datetime import datetime, UTC
 
-class LoginType(str, enum.Enum):
-    normal = "normal"
-    kakao = "kakao"
-    google = "google"
-    naver = "naver"
 
 class Member(SQLModel, table=True):
     __tablename__ = "member"
     
     member_seq: Optional[int] = Field(default=None, primary_key=True)
-    nickname: str
-    email: str
-    password: Optional[str] = None
-    login_type: LoginType = LoginType.normal
-    oauth_provider: Optional[str] = None
-    oauth_id: Optional[str] = None
-    email_verified: bool = False
-    last_login_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    nickname: str = Field(max_length=100, nullable=False, description="닉네임")
+    email: str = Field(max_length=255, nullable=False, unique=True, description="이메일")
+    password: Optional[str] = Field(default=None, max_length=255, description="비밀번호")
+    joined_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="가입일")
+    profile_url: Optional[str] = Field(default=None, max_length=255, description="프로필 URL")
