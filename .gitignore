@@ -1,0 +1,29 @@
+# 가상환경 폴더 무시
+.python-3.11/
+venv/
+env/
+
+# 파이썬 바이트코드 및 캐시 무시
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 파이썬 환경 파일 무시
+.Python
+
+# VSCode 설정 폴더 무시
+.vscode/
+
+# Pytest 캐시 무시
+.pytest_cache/
+
+# 시스템 파일 무시 (Mac, Windows)
+.DS_Store
+Thumbs.db
+
+# 환경 변수 파일 무시
+.env
+
+# 로그 파일 무시
+*.log
