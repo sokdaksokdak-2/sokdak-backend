@@ -1,5 +1,4 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-# from utils.speech_to_text import transcribe_audio
 from utils.vito_token_manager import get_valid_token
 from services.stt_service import request_transcription, transcription_result
 import tempfile
