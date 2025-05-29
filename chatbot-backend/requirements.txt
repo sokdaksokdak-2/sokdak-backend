@@ -6,3 +6,6 @@ pydantic
 mysqlclient  # 또는 pymysql
 python-dotenv
 pytest
+
+passlib[bcrypt]
+PyJWT
