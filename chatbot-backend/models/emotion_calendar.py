@@ -12,7 +12,7 @@ class EmotionCalendar(SQLModel, table=True):
 
     calendar_seq: Optional[int] = Field(default=None, primary_key=True)
     calendar_date: date = Field(nullable=False)
-    memo: Optional[str] = Field(default=None)
+    
 
     # 외래키 - 제약조건 X
     member_seq: int = Field(nullable=False)

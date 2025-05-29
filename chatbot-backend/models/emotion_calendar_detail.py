@@ -13,9 +13,10 @@ class EmotionCalendarDetail(SQLModel, table=True):
     detail_seq: Optional[int] = Field(default=None, primary_key=True)
     emotion_score: int = Field(default=1)
     source: SourceType = Field(description="user | ai")
-    summary: Optional[str] = Field(default=None)
+    context: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    title: str = Field()
 
     # 외래키 - 제약조건X 정수필드
-    emotioncalendar_seq: int = Field()
+    calendar_seq: int = Field()
     emotion_seq: int = Field()

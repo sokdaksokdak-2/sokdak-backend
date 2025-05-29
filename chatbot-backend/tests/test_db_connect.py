@@ -46,7 +46,8 @@ def test_table_creation():
         "member_mission", 
         "emotion_calendar",
         "emotion_calendar_details",
-        "member_oauth"
+        "member_oauth",
+        "emotion_report"
     ]
     for table in expected_tables:
         assert table in tables, f"'{table}' 테이블이 생성되지 않았습니다."

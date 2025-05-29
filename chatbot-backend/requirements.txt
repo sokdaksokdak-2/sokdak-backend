@@ -6,3 +6,5 @@ pydantic
 mysqlclient  # 또는 pymysql
 python-dotenv
 pytest
+requests
+openai
