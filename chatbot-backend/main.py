@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from api import api_router
 from contextlib import asynccontextmanager
-from db.init_db import init_db
+from db import init_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,8 +14,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # 각 라우터를 FastAPI 앱에 포함
-app.include_router(api_router, prefix="/api", tags=["stt"])
-
+app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 async def root():

@@ -6,7 +6,7 @@ import shutil
 import os
 
 # 라우터로 등록할 APIRouter 인스턴스 생성
-router = APIRouter()
+router = APIRouter(prefix="/stt")
 
 @router.get("/stt-token")
 def stt_endpoint():
@@ -17,7 +17,7 @@ def stt_endpoint():
 
 # 음성 인식 VITO API 호출 
 # return : transcribe_id ->음성 인식 결과도 요청해야 줌
-@router.post("/stt")
+@router.post("")
 async def stt(audio_file: UploadFile = File(...), language: str = "ko"):
     print("✅stt api called")
     token = get_valid_token()
@@ -26,7 +26,7 @@ async def stt(audio_file: UploadFile = File(...), language: str = "ko"):
 
 # 음성 인식 결과 조회
 # return : status, text
-@router.get("/stt/{transcribe_id}")
+@router.get("/{transcribe_id}")
 def stt_result(transcribe_id: str):
     token = get_valid_token()
     result = transcription_result(token, transcribe_id)
