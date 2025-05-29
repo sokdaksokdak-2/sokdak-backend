@@ -8,3 +8,5 @@ python-dotenv
 pytest
 requests
 openai
+passlib[bcrypt]
+PyJWT

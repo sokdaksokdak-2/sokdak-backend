@@ -1,10 +1,11 @@
 import time
 import requests
 from fastapi import HTTPException
+from core.config import settings
 
-CLIENT_ID = "aahd2L5mbJjItwYY9Khf"
-CLIENT_SECRET = "HxKZe8oQeNNXg3cd8cpxQctfh0w-1mOp4-ZdfrZa"
-AUTH_URL = "https://openapi.vito.ai/v1/authenticate"
+CLIENT_ID = settings.vito_client_id
+CLIENT_SECRET = settings.vito_client_secret
+AUTH_URL = settings.vito_auth_url
 
 access_token = None
 expire_at = 0

@@ -9,12 +9,21 @@ from .stt_api import router as stt_router
 from .emotion_api import router as emotion_router
 from .emo_calendar import router as emo_calendar_router
 from .emo_report import router as emo_report_router
+from .member_api import router as member_router
+from .auth_api import router as auth_router
+from .oauth_api import router as oauth_router
+
 
 # APIRouter 인스턴스 생성
 api_router = APIRouter()
 
 # 각 라우터들을 버전별로 추가
+
 api_router.include_router(stt_router, prefix="/stt", tags=["stt"])
 api_router.include_router(emotion_router, prefix="/emotion", tags=["emotion"])
 api_router.include_router(emo_calendar_router, prefix="/emo_calendar", tags=["calendar"])
 api_router.include_router(emo_report_router, prefix="/emo_report", tags=["report"])
+api_router.include_router(member_router, prefix="/member", tags=["member"])
+api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
+api_router.include_router(oauth_router, prefix="/oauth", tags=["OAuth"])
+
