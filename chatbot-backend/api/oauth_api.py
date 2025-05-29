@@ -7,7 +7,7 @@ from db.session import get_session
 from schemas.auth import LoginResponseDto
 from utils.oauth_url_builder import OAuthLoginURLBuilder
 
-router = APIRouter(prefix="/oauth", tags=["OAuth"])
+router = APIRouter()
 
 SUPPORTED_PROVIDERS = ["google", "kakao","naver"]
 

@@ -8,7 +8,7 @@ from services.auth_service import AuthService
 from db.session import get_session
 
 
-router = APIRouter(prefix="/auth")
+router = APIRouter()
 
 # DI 주입 방식으로 변경
 # TODO : 이후 dependencies/auth_dependencies.py 파일로 분리

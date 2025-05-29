@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from db.session import get_session
 from crud.emotion import create_emotion
 
-router = APIRouter(prefix="/emotion")
+router = APIRouter()
 
 @router.post("/test-create-emotion")
 def test_create_emotion(

@@ -5,7 +5,7 @@ from services.member_service import MemberService
 from sqlalchemy.orm import Session
 from db.session import get_session
 
-router = APIRouter(prefix="/member")
+router = APIRouter()
 
 
 # TODO Response 모델 추가
