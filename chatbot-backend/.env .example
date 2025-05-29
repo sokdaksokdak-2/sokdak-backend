@@ -18,3 +18,11 @@ NAVER_REDIRECT_URI=http://localhost:8000/api/oauth/login/naver/callback
 # 왜 필요한가? - 누가 만든 토큰인지, 내용이 위조되지 않았는지를 확인하기 위해
 # 사용자가 준 토큰이 진짜 서버에서 발급한 것인지 검증
 JWT_SECRET_KEY=your_jwt_secret_key_here
+
+# vito(stt) api 키값
+VITO_CLIENT_ID = your_client_id_here
+VITO_CLIENT_SECRET = your_client_secret_here
+VITO_AUTH_URL = "https://openapi.vito.ai/v1/authenticate"
+
+# gpt api 키값
+OPENAI_API_KEY = your_client_secret_here
