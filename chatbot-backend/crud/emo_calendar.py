@@ -18,6 +18,10 @@ from utils import OPENAI_API_KEY
 default_gray_image_url = os.getenv("https://your-cdn.com/images/question_gray.png") # 감정 캐릭터 이미지가 아닌 회색 사람 이미지 url
 
 def get_strongest_emotions_by_month(db: Session, member_seq: int, year: int, month: int):
+    """
+    월별 각 날짜별로 가장 강한 감정 캐릭터 이미지 URL을 반환
+    """
+       
     # 1-1. 날짜 범위 생성
     first_day = date(year, month, 1)
     last_day = (date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)) - timedelta(days=1)
@@ -80,6 +84,10 @@ def get_strongest_emotions_by_month(db: Session, member_seq: int, year: int, mon
 
 # 2. 캘린더 상세페이지(해당 날짜 전체 게시물등 불러오기)
 def get_emotions_by_date(db: Session, member_seq: int, calendar_date: str):
+    """
+    특정 날짜의 감정 기록 전체 반환
+    """
+
     result = (
         db.query(Emotion.character_image_url,
                  EmotionCalendarDetail.context,
@@ -100,6 +108,10 @@ def get_emotions_by_date(db: Session, member_seq: int, calendar_date: str):
 
 # 3. 캘린더 내용 수정 (감정 캐릭터, 제목, context 등 변경)
 def update_emotion_calendar(db: Session, calendar_seq: int, update_data: EmotionCalendarUpdateRequest):
+    """
+    감정 캘린더(및 디테일) 수정
+    """
+
     # 3-1. 기본 감정 캘린더 조회
     calendar = db.query(EmotionCalendar).filter(EmotionCalendar.calendar_seq == calendar_seq).first()
     if not calendar:
@@ -135,6 +147,9 @@ def update_emotion_calendar(db: Session, calendar_seq: int, update_data: Emotion
 
 # 4. 캘린더에 새로운 내용 입력 (사용자가 감정, 메모, 제목 직접 입력)
 def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
+    """
+    감정 캘린더 및 디테일 새로 생성
+    """
     # 1. EmotionCalendar 테이블에 새 레코드 추가 (기본 정보만)
     new_calendar = EmotionCalendar(
         member_seq=request.member_seq,
@@ -163,6 +178,9 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
 
 # 5. 캘린더 내용 삭제 (calendar_seq 기준)
 def delete_emotion_calendar(db: Session, calendar_seq: int) -> bool:
+    """
+    감정 캘린더 및 디테일 삭제
+    """
     # 관련된 EmotionCalendarDetail 먼저 삭제
     db.query(EmotionCalendarDetail).filter(
         EmotionCalendarDetail.calendar_seq == calendar_seq
@@ -177,38 +195,65 @@ def delete_emotion_calendar(db: Session, calendar_seq: int) -> bool:
     return deleted > 0
 
 
+def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, end_date: date):
+    """
+    월별 감정별 (name_kr, intensity, count) raw 데이터 반환
+    """
+    return db.query(
+        Emotion.name_kr,
+        Emotion.emotion_intensity,
+        func.count().label("count")
+    ).join(EmotionCalendarDetail, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq
+    ).join(Emotion, EmotionCalendarDetail.emotion_seq == Emotion.emotion_seq
+    ).filter(
+        EmotionCalendar.member_seq == member_seq,
+        EmotionCalendar.calendar_date >= start_date,
+        EmotionCalendar.calendar_date <= end_date
+    ).group_by(Emotion.name_kr, Emotion.emotion_intensity).all()
+
+def get_monthly_contexts(db: Session, member_seq: int, start_date: date, end_date: date):
+    """
+    월별 감정 메모 context 리스트 반환
+    """
+    contexts = db.query(EmotionCalendarDetail.context
+    ).join(EmotionCalendar, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq
+    ).filter(
+        EmotionCalendar.member_seq == member_seq,
+        EmotionCalendar.calendar_date >= start_date,
+        EmotionCalendar.calendar_date <= end_date,
+        EmotionCalendarDetail.context.isnot(None)
+    ).all()
+    return [c[0] for c in contexts if c[0]]
+
+
 # 6. STT 텍스트 기반 감정 분석 및 저장
-def save_emotion_from_text(db: Session, member_seq: int, calendar_date: str, text: str, title: str = None):
-    from utils.gpt import analyze_emotion_from_text
-
-    # 1. 감정 분석
-    emotion_name_en, intensity = analyze_emotion_from_text(text)
-
-    # 2. Emotion 테이블에서 해당 감정 정보 조회
+def save_emotion_from_text(db: Session, member_seq: int, calendar_date: date, text: str, title: str = None):
+    """
+    텍스트 기반 감정 분석 후 캘린더에 저장
+    """
+    from services import analyze_emotion_from_text
+    emotion_data = analyze_emotion_from_text(text)
     emotion = db.query(Emotion).filter(
-        Emotion.name_en == emotion_name_en,
-        Emotion.emotion_intensity == intensity
+        Emotion.name_en == emotion_data["emotion_name_en"],
+        Emotion.emotion_intensity == emotion_data["emotion_intensity"]
     ).first()
-
     if not emotion:
         raise ValueError("해당 감정 정보가 Emotion 테이블에 없습니다.")
 
-    # 3. EmotionCalendar에 저장
     new_calendar = EmotionCalendar(
         member_seq=member_seq,
         calendar_date=calendar_date
     )
     db.add(new_calendar)
-    db.flush()  # calendar_seq 확보
+    db.flush()
 
-    # 4. EmotionCalendarDetail에 저장 (context 포함!)
     new_detail = EmotionCalendarDetail(
         calendar_seq=new_calendar.calendar_seq,
         emotion_seq=emotion.emotion_seq,
         title=title,
-        context=text  # context 필드는 이 테이블에 있음!
+        context=text,
+        source="ai"
     )
     db.add(new_detail)
-
     db.commit()
     return new_calendar
