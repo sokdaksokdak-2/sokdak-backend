@@ -12,7 +12,7 @@ from .emo_report import router as emo_report_router
 from .member_api import router as member_router
 from .auth_api import router as auth_router
 from .oauth_api import router as oauth_router
-
+from .chatbot_api import router as chatbot_router
 
 # APIRouter 인스턴스 생성
 api_router = APIRouter()
@@ -26,4 +26,5 @@ api_router.include_router(emo_report_router, prefix="/emo_report", tags=["report
 api_router.include_router(member_router, prefix="/member", tags=["member"])
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(oauth_router, prefix="/oauth", tags=["OAuth"])
+api_router.include_router(chatbot_router, prefix="/chatbot", tags=["chatbot"])
 
