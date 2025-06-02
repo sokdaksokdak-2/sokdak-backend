@@ -24,20 +24,19 @@ class MemberService:
             self.db,
             request.email, 
             hashed_password, 
-            request.email
         )
         
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={"message" : "회원가입 성공"})
 
-    # 캐릭터 이름 변경
-    def update_character_name(self, request: UpdateCharacterNameRequestDto):
-        member = member_crud.get_member_by_member_seq(self.db, request.member_seq)
-        if not member : 
-            raise HTTPException(status_code=404, detail="존재하지 않는 회원입니다.")
+    # 캐릭터 이름 변경 [❌ 사용 중지된 API입니다. - 2025.06.02]
+    # def update_character_name(self, request: UpdateCharacterNameRequestDto):
+    #     member = member_crud.get_member_by_member_seq(self.db, request.member_seq)
+    #     if not member : 
+    #         raise HTTPException(status_code=404, detail="존재하지 않는 회원입니다.")
         
-        member_crud.update_character_name(self.db, member, request.character_name)
+    #     member_crud.update_character_name(self.db, member, request.character_name)
         
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"message" : "캐릭터 이름 변경 성공"})
+    #     return JSONResponse(status_code=status.HTTP_200_OK, content={"message" : "캐릭터 이름 변경 성공"})
     
     # 닉네임 변경
     def update_nickname(self, request: UpdateNicknameRequestDto):

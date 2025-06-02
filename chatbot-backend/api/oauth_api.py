@@ -19,6 +19,7 @@ def get_oauth_service(db: Session = Depends(get_session)) -> OAuthService:
 
 # OAuth 로그인 - 통합
 @router.get("/login/{provider}",
+            summary="OAuth 로그인 페이지로 리다이렉트 (google, kakao, naver)",
             description="{google, kakao, naver} OAuth 로그인 페이지로 리다이렉트",
         )
 def oauth_login(provider: str):
@@ -37,6 +38,7 @@ def oauth_login(provider: str):
 
 
 @router.get("/login/{provider}/callback",
+            summary="OAuth 콜백 처리(google, kakao, naver)",
             response_model=LoginResponseDto,
             dependencies=[Depends(get_oauth_service)],
             response_description="{google, kakao, naver} OAuth 콜백 처리",

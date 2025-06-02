@@ -7,7 +7,8 @@ from models import Member, Emotion, Mission, MemberMission, EmotionCalendar, Emo
 
 # MySQL 연결 문자열
 # 형식: mysql+pymysql://<유저이름>:<비밀번호>@<호스트>/<DB이름>
-DATABASE_URL = "mysql+pymysql://root:123456@localhost/whisper_db"
+# DATABASE_URL = "mysql+pymysql://root:123456@localhost/whisper_db"
+DATABASE_URL="mysql+pymysql://campus_LGDX6_p3_1:smhrd1@project-db-campus.smhrd.com:3307/campus_LGDX6_p3_1"
 
 def test_db_connection():
     print("▶️MySQL 연결 테스트 시작...")
