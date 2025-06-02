@@ -43,7 +43,7 @@ def read_emo_calendar(
     """
     특정 날짜의 감정 기록 전체 조회 API
     - member_seq: 회원 시퀀스
-    - calendar_date: 조회할 날짜
+    - calendar_date: 조회할 날짜 (예시: 2025-05-31)
     - 반환: 해당 날짜의 EmotionCalendar 리스트
     """
     return get_daily_emotions(db, member_seq, calendar_date)

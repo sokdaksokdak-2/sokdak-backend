@@ -12,3 +12,4 @@ def create_emotion(db: AsyncSession, name_kr: str, name_en: str, color_code: str
     db.commit()
     db.refresh(new_emotion)
     return new_emotion
+ 
