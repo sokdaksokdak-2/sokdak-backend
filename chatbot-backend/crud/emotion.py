@@ -15,3 +15,4 @@ def create_emotion(db: AsyncSession, name_kr: str, name_en: str, color_code: str
 
 def get_emotion_by_emotion_seq(db: AsyncSession, emotino_seq: int) -> Emotion:
     return db.query(Emotion).filter(Emotion.emotion_seq == emotino_seq).first()
+

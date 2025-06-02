@@ -12,7 +12,7 @@ class EmotionCalendarDetail(SQLModel, table=True):
 
     detail_seq: Optional[int] = Field(default=None, primary_key=True)
     emotion_score: int = Field(default=1)
-    source: SourceType = Field(description="user | ai")
+    source: SourceType = Field(nullable=False, description="user | ai")
     context: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     title: str = Field()
