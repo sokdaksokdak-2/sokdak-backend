@@ -5,6 +5,15 @@ from api import api_router
 from contextlib import asynccontextmanager
 from db import init_db
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO, # INFO 레벨 이상의 로그만 출력(DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format="%(asctime)s - [%(levelname)s] - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()  # DB 초기화 (비동기 함수면 await 필요)
