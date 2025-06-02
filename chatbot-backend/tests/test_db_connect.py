@@ -4,10 +4,13 @@ from sqlalchemy import inspect  # SQLAlchemy의 inspect 모듈을 사용하여 D
 from sqlalchemy import text # SQLAlchemy의 text 모듈을 사용하여 SQL 쿼리 실행
 from sqlmodel import SQLModel, create_engine
 from models import Member, Emotion, Mission, MemberMission, EmotionCalendar, EmotionCalendarDetail, MemberOAuth
-
+from dotenv import load_dotenv
+import os
 # MySQL 연결 문자열
 # 형식: mysql+pymysql://<유저이름>:<비밀번호>@<호스트>/<DB이름>
-DATABASE_URL = "mysql+pymysql://root:123456@localhost/whisper_db"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def test_db_connection():
     print("▶️MySQL 연결 테스트 시작...")
