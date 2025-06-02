@@ -11,7 +11,7 @@ import os
 
 
 # 라우터로 등록할 APIRouter 인스턴스 생성
-router = APIRouter(prefix="/stt")
+router = APIRouter()
 
 # 1. STT 토큰 확인
 @router.get("/token")

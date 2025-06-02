@@ -6,3 +6,5 @@ from .gpt import analyze_emotion_from_text
 from .vito_token_manager import get_new_token
 from .vito_token_manager import get_valid_token
 
+from .emo_cal import calculate_emotion_distribution
+

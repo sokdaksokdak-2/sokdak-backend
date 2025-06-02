@@ -8,5 +8,5 @@ from .emo_calendar import create_emotion_calendar
 from .emo_calendar import delete_emotion_calendar
 from .emo_calendar import save_emotion_from_text
 
-from .emo_report import create_emotion_report
+
 from .emo_report import get_emotion_report
