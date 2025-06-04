@@ -1,6 +1,9 @@
 # 개발환경 - 개발용 DB : mysql(Local)
 DATABASE_URL=mysql+pymysql://root:123456@localhost:3306/whisper_db
 
+# 배포용 DB
+DATABASE_URL="mysql+pymysql://campus_LGDX6_p3_1:smhrd1@project-db-campus.smhrd.com:3307/campus_LGDX6_p3_1"
+
 # OAuth2 로그인
 GOOGLE_CLIENT_ID=your_client_id_here
 # GOOGLE_CLIENT_SECRET : Google OAuth 인증용 비밀키, 내 앱이 Google OAuth 서버랑 통신할 때 내가 진짜 등록된 앱이라고 인증하기 위해 사용
