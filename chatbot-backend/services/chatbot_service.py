@@ -131,7 +131,7 @@ class ChatbotService:
         prompt = [{"role": "system", "content": CHAT_PROMPT.format(emotion_name=emotion_name, strength=strength)}]
     
         for record in chat_history:
-            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {record.emotion_name}, 강도: {record.emotion_strength}), 캐릭터: {record.character_name}"})
+            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {record.emotion_seq}, 강도: {record.emotion_score}), 캐릭터: {record.character_name}"})
             prompt.append({"role": "assistant", "content": f"{record.chatbot_response} ({record.character_name} 캐릭터 응답)"})
         
         prompt.append({"role": "user", "content": user_message})
