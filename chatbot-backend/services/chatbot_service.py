@@ -115,7 +115,7 @@ class ChatbotService:
         JSON 형식으로 반환
         {
             "emotion_seq": 1,
-            "strength": 2
+            "emotion_intensity": 2
         }
         '''
         return [
@@ -124,14 +124,14 @@ class ChatbotService:
         ]
 
 
-    def build_chatbot_prompt(self,user_message: str, chat_history: list[ChatHistoryDto], emotion_name: str, strength: str):
+    def build_chatbot_prompt(self,user_message: str, chat_history: list[ChatHistoryDto], emotion_seq: str, emotion_intensity: str):
         '''
         챗봇 응답 생성
         '''
-        prompt = [{"role": "system", "content": CHAT_PROMPT.format(emotion_name=emotion_name, strength=strength)}]
+        prompt = [{"role": "system", "content": CHAT_PROMPT.format(emotion_seq=emotion_seq, emotion_intensity=emotion_intensity)}]
     
         for record in chat_history:
-            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {record.emotion_name}, 강도: {record.emotion_strength}), 캐릭터: {record.character_name}"})
+            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {record.emotion_seq}, 강도: {record.emotion_intensity}), 캐릭터: {record.character_name}"})
             prompt.append({"role": "assistant", "content": f"{record.chatbot_response} ({record.character_name} 캐릭터 응답)"})
         
         prompt.append({"role": "user", "content": user_message})
@@ -144,7 +144,7 @@ class ChatbotService:
         chat_history = await self.get_chat_history(member_seq, HISTORY_LIMIT)
         # 2. 감정 분류 - 현재 대화
         emotion_analysis_prompt = self.build_emotion_prompt(user_message)
-        emotion_response = await self.call_openai(model="gpt-3.5-turbo", prompt=emotion_analysis_prompt)
+        emotion_response = await self.call_openai(model="gpt-3.5-turbo", prompt=emotion_analysis_prompt, temperature=0.3)
         
         try :
             emotion_response = json.loads(emotion_response)
@@ -158,7 +158,7 @@ class ChatbotService:
                                                                 chat_history, 
                                                                 EMOTION_NAME_MAP[int(emotion_response.get("emotion_seq"))],
                                                                 STRENGTH_MAP[int(emotion_response.get("strength"))])
-        chatbot_response = await self.call_openai(model="gpt-4o-mini", prompt=chatbot_prompt)
+        chatbot_response = await self.call_openai(model="gpt-4o-mini", prompt=chatbot_prompt, temperature=0.7)
         # 대화 내역 저장 -redis
         await self.save_chat_history(
                 member_seq, 
@@ -174,10 +174,11 @@ class ChatbotService:
         return chatbot_response
     
     # GPT 모델 호출
-    async def call_openai(self, model: str, prompt: str):
+    async def call_openai(self, model: str, prompt: str, temperature: float):
         response = client.chat.completions.create(
             model=model,
             messages=prompt,
+            temperature=temperature,
             stream=False,
         )
         return response.choices[0].message.content
@@ -193,7 +194,7 @@ class ChatbotService:
             {"role": "user", "content": user_message}
         ]
 
-        response =await self.call_openai(model, prompt)
+        response =await self.call_openai(model, prompt, temperature=0.3)
         response_json = json.loads(response)
 
         

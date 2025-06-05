@@ -52,7 +52,7 @@ async def stream_chat(request: StreamingChatRequestDto, chatbot_service: Chatbot
     response = await chatbot_service.get_chatbot_response_no_user(request.user_message)
 
     logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
-    return StreamingResponse(generator, media_type="text/event-stream")
+    return response
 
 
 @router.post("/stream_test",
