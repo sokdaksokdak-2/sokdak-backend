@@ -1,16 +1,17 @@
 from pydantic import BaseModel
 from schemas.emotion import EmotionDto
 from datetime import datetime
+import json
 
 
 class ChatRequestDto(BaseModel):
     member_seq: int
     user_message: str
 
-# TODO : 챗봇 응답 형식
-class ChatResponseDto(BaseModel):
-    chatbot_response: str
-    emotion_seq: int
+# # TODO : 챗봇 응답 형식
+# class ChatResponseDto(BaseModel):
+#     chatbot_response: str
+#     emotion_seq: int
 
 class EmotionAnalysisResponseDto(BaseModel):
     emotion_seq: int
@@ -27,8 +28,8 @@ class StreamingChatResponseDto(BaseModel):
 
 class ChatHistoryDto(BaseModel):
     user_message: str
-    chatbot_response: str
-    emotion_seq: int
-    emotion_score: int
+    chatbot_response: dict
+    # emotion_seq: int
+    # emotion_score: int
     created_at: datetime
-    character_name: str | None = None
+    # character_name: str | None = None
