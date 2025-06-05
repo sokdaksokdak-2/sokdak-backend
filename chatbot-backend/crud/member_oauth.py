@@ -18,3 +18,7 @@ def register_oauth_account(db: Session, provider: OAuthProvider, oauth_id: str, 
         )
         db.add(oauth_account)
         db.commit()
+        db.refresh(oauth_account)
+
+def delete_oauth_account_by_member_seq(db: Session, member_seq: int): # 커밋은 서비스계열에서 한번에 처리 
+    return db.query(MemberOAuth).filter(MemberOAuth.member_seq == member_seq).delete()
