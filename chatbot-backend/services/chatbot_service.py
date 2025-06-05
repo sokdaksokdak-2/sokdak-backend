@@ -119,7 +119,7 @@ class ChatbotService:
         JSON 형식으로 반환
         {
             "emotion_seq": 1,
-            "strength": 2
+            "emotion_intensity": 2
         }
         '''
         return [
@@ -149,6 +149,7 @@ class ChatbotService:
         # 2. 감정 분류 - 현재 대화
         # emotion_analysis_prompt = self.build_emotion_prompt(user_message)
         # emotion_response = await self.call_openai(model="gpt-3.5-turbo", prompt=emotion_analysis_prompt)
+
         
         # try :
         #     emotion_response = json.loads(emotion_response)
@@ -158,6 +159,7 @@ class ChatbotService:
         
         # logger.info(f"🚨최근 대화 내역 결과 : {chat_history}")
         # 3. 챗봇 응답 생성 string
+
         chatbot_prompt = self.build_chatbot_prompt(user_message, chat_history)
         chatbot_response = await self.call_openai(prompt=chatbot_prompt, model="gpt-4o-mini")
         logger.info(chatbot_response)
@@ -202,6 +204,7 @@ class ChatbotService:
             {"role": "system", "content": CHAT_PROMPT},
             {"role": "user", "content": user_message}
         ]
+
 
         response =await self.call_openai(prompt, model)
         response_json = json.loads(response)
