@@ -12,3 +12,4 @@ openai
 passlib[bcrypt]
 PyJWT
 redis[async]
+pyserial
