@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     vito_client_secret:str
     vito_auth_url:str
 
+    redis_host: str
+    redis_port : int
+    redis_db : int
+    redis_password : str | None = None
+
 
     class Config:
         env_file = ".env"
