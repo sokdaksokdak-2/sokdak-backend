@@ -131,7 +131,7 @@ class ChatbotService:
         prompt = [{"role": "system", "content": CHAT_PROMPT.format(emotion_name=emotion_name, strength=strength)}]
     
         for record in chat_history:
-            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {record.emotion_name}, 강도: {record.emotion_strength}), 캐릭터: {record.character_name}"})
+            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {EMOTION_NAME_MAP[record.emotion_seq]}, 강도: {STRENGTH_MAP[record.emotion_score]}), 캐릭터: {record.character_name}"})
             prompt.append({"role": "assistant", "content": f"{record.chatbot_response} ({record.character_name} 캐릭터 응답)"})
         
         prompt.append({"role": "user", "content": user_message})
@@ -152,7 +152,7 @@ class ChatbotService:
             logger.error(f"감정 분석 실패: {e}")
             raise HTTPException(status_code=500, detail="감정 분석 실패")
         
-        logger.info(f"🚨감정 분석 결과 : {emotion_response}")
+        logger.info(f"🚨최근 대화 내역 결과 : {chat_history}")
         # 3. 챗봇 응답 생성 string
         chatbot_prompt = self.build_chatbot_prompt(user_message, 
                                                                 chat_history, 

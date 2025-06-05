@@ -11,5 +11,5 @@ class Member(SQLModel, table=True):
     nickname: str = Field(max_length=100, nullable=False, description="닉네임")
     password: Optional[str] = Field(default=None, max_length=255, description="비밀번호")
     joined_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="가입일")
-    character_name : Optional[str] = Field(default="속닥이", max_length=50, description="캐릭터 이름")
+    # character_name : Optional[str] = Field(default="속닥이", max_length=50, description="캐릭터 이름")
     # profile_url: Optional[str] = Field(default=None, max_length=255, description="프로필 URL")
