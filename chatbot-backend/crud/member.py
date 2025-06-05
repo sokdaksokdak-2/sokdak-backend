@@ -24,3 +24,7 @@ def update_nickname(db: Session, member: Member, new_nickname: str) :
     member.nickname = new_nickname
     db.commit()
     db.refresh(member)
+
+def delete_member_by_member_seq(db: Session, member_seq: int):
+    return db.query(Member).filter(Member.member_seq == member_seq).delete()
+
