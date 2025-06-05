@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from models import EmotionCalendar, EmotionCalendarDetail, Emotion
 from schemas.emo_calendar import EmotionCalendarResponse, EmotionCalendarUpdateRequest, EmotionCalendarSummaryResponse, EmotionCalendarCreateRequest
 from sqlalchemy import func, extract
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, UTC
 import os
 from openai import OpenAI
 import openai
@@ -257,3 +257,27 @@ def save_emotion_from_text(db: Session, member_seq: int, calendar_date: date, te
     db.add(new_detail)
     db.commit()
     return new_calendar
+
+def save_emotion_calendar(db: Session, member_seq: int, emotion_seq: int, emotion_score: int, title: str, context: str, source: str):
+    ''' 챗봇 대화 내용 저장 요약
+    '''
+    new_calendar = EmotionCalendar(
+        member_seq=member_seq,
+        calendar_date=datetime.now(UTC).date(),        
+    )
+
+    new_calendar_detail = EmotionCalendarDetail(
+        calendar_seq=new_calendar.calendar_seq,
+        member_seq=member_seq,
+        emotion_seq=emotion_seq,
+        emotion_score=emotion_score,
+        title=title,
+        context=context,
+        created_at=datetime.now(UTC),
+        source=source
+    )
+
+    db.add(new_calendar)
+    db.add(new_calendar_detail)
+    db.commit()
+    

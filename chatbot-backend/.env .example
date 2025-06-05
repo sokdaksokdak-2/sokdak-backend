@@ -29,3 +29,9 @@ VITO_AUTH_URL = "https://openapi.vito.ai/v1/authenticate"
 
 # gpt api 키값
 OPENAI_API_KEY = your_client_secret_here
+
+# Redis 설정
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
