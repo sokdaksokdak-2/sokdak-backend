@@ -73,6 +73,6 @@ class AuthService:
             refresh_token=self.token_service.create_refresh_token(member),
             member_seq=member.member_seq,
             nickname=member.nickname,
-            character_name=member.character_name
+            # character_name=member.character_name
         )
 
