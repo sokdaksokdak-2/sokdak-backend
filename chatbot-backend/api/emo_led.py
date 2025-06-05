@@ -25,21 +25,3 @@ def test_send_color(color_code: str):
     send_color_to_arduino(color_code)
     return {"message": f"{color_code} 전송 완료"}
 
-
-# from fastapi import APIRouter, Depends, HTTPException
-# from sqlalchemy.orm import Session
-# from schemas import EmotionLEDRequest
-# from crud import get_emotion_color_by_seq
-# from services import send_color_to_arduino
-# from db import get_session
-
-# router = APIRouter()
-
-# @router.post("/send-emotion-color")
-# def send_emotion_color(req: EmotionLEDRequest, db: Session = Depends(get_session)):
-#     color_code = get_emotion_color_by_seq(db, req.emotion_seq)
-#     if not color_code:
-#         raise HTTPException(status_code=404, detail="Emotion not found")
-    
-#     send_color_to_arduino(color_code)
-#     return {"message": f"Color {color_code} sent to Arduino"}
