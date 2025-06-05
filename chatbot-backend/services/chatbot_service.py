@@ -4,7 +4,7 @@ from utils.gpt_token_manager import get_openai_client
 from utils.redis_client import redis_client
 import json
 from schemas.chatbot import ChatHistoryDto
-from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_PROMPT_NO_USER_INFO
+from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
 from crud import emo_calendar as emo_calendar_crud
@@ -12,7 +12,7 @@ from collections import Counter
 import logging
 
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
-HISTORY_LIMIT = 5 # 최근 대화 내역 저장 개수
+HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
 
 logger = logging. getLogger(__name__)
 client = get_openai_client()
@@ -41,7 +41,11 @@ class ChatbotService:
         else:
             chat_history = await redis_client.lrange(key, -limit, -1)
 
-        return [ChatHistoryDto(**json.loads(history)) for history in chat_history]
+        chat_history_list = [ChatHistoryDto(**json.loads(history)) for history in chat_history]
+
+        for item in chat_history_list:
+            logger.info(f"{item}")
+        return chat_history_list
         
     # TODO : 대화 내용 요약 저장 수정
     async def save_chat_summary(self, member_seq: int):
@@ -69,7 +73,7 @@ class ChatbotService:
 
         # 대화 내용 요약, 감정
         summary_prompt = self.build_summary_prompt(user_messages)
-        summary = await self.call_openai(summary_prompt) 
+        summary = await self.call_openai(summary_prompt, "gpt-3.5-turbor") 
         title = summary.get("title")
         context = summary.get("context")
 
@@ -124,18 +128,18 @@ class ChatbotService:
         ]
 
 
-    def build_chatbot_prompt(self,user_message: str, chat_history: list[ChatHistoryDto], emotion_seq: str, emotion_intensity: str):
+    def build_chatbot_prompt(self,user_message: str, chat_history: list[ChatHistoryDto] | None = None):
         '''
         챗봇 응답 생성
         '''
-        prompt = [{"role": "system", "content": CHAT_PROMPT.format(emotion_seq=emotion_seq, emotion_intensity=emotion_intensity)}]
+        prompt = [{"role": "system", "content": CHAT_PROMPT}]
     
         for record in chat_history:
-            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {record.emotion_seq}, 강도: {record.emotion_intensity}), 캐릭터: {record.character_name}"})
-            prompt.append({"role": "assistant", "content": f"{record.chatbot_response} ({record.character_name} 캐릭터 응답)"})
+            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {EMOTION_NAME_MAP[record.chatbot_response.get('emotion_seq')]}, 강도: {STRENGTH_MAP[record.chatbot_response.get('emotion_score')]})"})
+            prompt.append({"role": "assistant", "content": json.dumps(record.chatbot_response, ensure_ascii=False)})
+            logger.info(f"{record}")
         
         prompt.append({"role": "user", "content": user_message})
-        print(prompt)
         return prompt
         
     
@@ -143,38 +147,45 @@ class ChatbotService:
         # 1. 최근 대화 내역 가져오기
         chat_history = await self.get_chat_history(member_seq, HISTORY_LIMIT)
         # 2. 감정 분류 - 현재 대화
-        emotion_analysis_prompt = self.build_emotion_prompt(user_message)
-        emotion_response = await self.call_openai(model="gpt-3.5-turbo", prompt=emotion_analysis_prompt, temperature=0.3)
-        
-        try :
-            emotion_response = json.loads(emotion_response)
-        except json.JSONDecodeError as e:
-            logger.error(f"감정 분석 실패: {e}")
-            raise HTTPException(status_code=500, detail="감정 분석 실패")
-        
-        logger.info(f"🚨감정 분석 결과 : {emotion_response}")
-        # 3. 챗봇 응답 생성 string
-        chatbot_prompt = self.build_chatbot_prompt(user_message, 
-                                                                chat_history, 
-                                                                EMOTION_NAME_MAP[int(emotion_response.get("emotion_seq"))],
-                                                                STRENGTH_MAP[int(emotion_response.get("strength"))])
-        chatbot_response = await self.call_openai(model="gpt-4o-mini", prompt=chatbot_prompt, temperature=0.7)
-        # 대화 내역 저장 -redis
-        await self.save_chat_history(
-                member_seq, 
-                ChatHistoryDto(
-                    user_message=user_message,
-                    chatbot_response=chatbot_response,
-                    emotion_seq=int(emotion_response.get("emotion_seq")),
-                    emotion_score=int(emotion_response.get("strength")),
-                    created_at=datetime.now(),
-                ),
-            )
+        # emotion_analysis_prompt = self.build_emotion_prompt(user_message)
+        # emotion_response = await self.call_openai(model="gpt-3.5-turbo", prompt=emotion_analysis_prompt)
 
-        return chatbot_response
+        
+        # try :
+        #     emotion_response = json.loads(emotion_response)
+        # except json.JSONDecodeError as e:
+        #     logger.error(f"감정 분석 실패: {e}")
+        #     raise HTTPException(status_code=500, detail="감정 분석 실패")
+        
+        # logger.info(f"🚨최근 대화 내역 결과 : {chat_history}")
+        # 3. 챗봇 응답 생성 string
+
+        chatbot_prompt = self.build_chatbot_prompt(user_message, chat_history)
+        chatbot_response = await self.call_openai(prompt=chatbot_prompt, model="gpt-4o-mini")
+        logger.info(chatbot_response)
+
+        try: 
+            chatbot_response_json = json.loads(chatbot_response)
+            # 대화 내역 저장 -redis
+            await self.save_chat_history(
+                    member_seq, 
+                    ChatHistoryDto(
+                        user_message=user_message,
+                        chatbot_response=chatbot_response_json,
+                        created_at=datetime.now(),
+                    ),
+                )
+        except json.JSONDecodeError as e:
+            # JSON 파싱 실패 시 에러 로그 출력
+            logger.error(f"챗봇 응답 JSON 파싱 실패: {e}")
+            raise HTTPException(status_code=500, detail="챗봇 응답 JSON 파싱 실패")
+
+            
+
+        return chatbot_response_json
     
     # GPT 모델 호출
-    async def call_openai(self, model: str, prompt: str, temperature: float):
+    async def call_openai(self, prompt: str, model: str = "gpt-3.5-turbor", temperature: float = 1.0):
         response = client.chat.completions.create(
             model=model,
             messages=prompt,
@@ -190,11 +201,12 @@ class ChatbotService:
             raise ValueError("user_message cannot be empty")
 
         prompt = [
-            {"role": "system", "content": CHAT_PROMPT_NO_USER_INFO},
+            {"role": "system", "content": CHAT_PROMPT},
             {"role": "user", "content": user_message}
         ]
 
-        response =await self.call_openai(model, prompt, temperature=0.3)
+
+        response =await self.call_openai(prompt, model)
         response_json = json.loads(response)
 
         

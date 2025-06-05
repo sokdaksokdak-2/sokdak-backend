@@ -5,7 +5,9 @@ from fastapi.responses import JSONResponse
 from schemas.member import RegisterRequestDto, UpdateCharacterNameRequestDto, UpdateNicknameRequestDto
 from sqlalchemy.orm import Session
 from crud import member as member_crud
+from crud import member_oauth as member_oauth_crud
 from passlib.context import CryptContext
+from sqlalchemy.exc import SQLAlchemyError
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -48,3 +50,21 @@ class MemberService:
         return JSONResponse(status_code=status.HTTP_200_OK, content={"message" : "닉네임 변경 성공"})
     
     # TODO : 회원 탈퇴
+    def delete_member(self, member_seq: int):
+        try:
+            delete_count_member = member_crud.delete_member_by_member_seq(self.db, member_seq)
+            delete_count_oauth = member_oauth_crud.delete_oauth_account_by_member_seq(self.db, member_seq)
+
+            # 회원 자체 삭제 실패 시 예외 발생
+            if delete_count_member == 0:
+                raise HTTPException(status_code=404, detail="회원 정보를 찾을 수 없습니다.")
+
+            # 소셜 연동 정보는 없을 수도 있으므로 경고 로그만
+            if delete_count_oauth == 0:
+                print(f"⚠️ 소셜 연동 정보 없음: member_seq={member_seq}")
+
+            self.db.commit()
+
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise HTTPException(status_code=500, detail="회원 탈퇴 중 DB 오류 발생: " + str(e))
