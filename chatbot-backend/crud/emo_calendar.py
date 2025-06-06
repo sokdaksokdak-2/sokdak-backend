@@ -5,7 +5,6 @@ from sqlalchemy import func, extract
 from datetime import date, timedelta, datetime, UTC
 import os
 from openai import OpenAI
-import openai
 
 from utils import OPENAI_API_KEY
 
@@ -265,6 +264,8 @@ def save_emotion_calendar(db: Session, member_seq: int, emotion_seq: int, emotio
         member_seq=member_seq,
         calendar_date=datetime.now(UTC).date(),        
     )
+    db.add(new_calendar)
+    db.commit()
 
     new_calendar_detail = EmotionCalendarDetail(
         calendar_seq=new_calendar.calendar_seq,
