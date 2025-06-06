@@ -77,7 +77,6 @@ class OAuthResponse:
             refresh_token=refresh_token,
             member_seq=member.member_seq,
             nickname=member.nickname,
-            character_name=member.character_name
         )
 
     @staticmethod

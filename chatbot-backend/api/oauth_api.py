@@ -42,7 +42,7 @@ def oauth_login(provider: str):
             response_model=LoginResponseDto,
             dependencies=[Depends(get_oauth_service)],
             response_description="{google, kakao, naver} OAuth 콜백 처리",
-            response_model_include={"access_token", "refresh_token","member_seq", "nickname", "character_name"}
+            response_model_include={"access_token", "refresh_token","member_seq", "nickname"}
         )
 async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)) :
     
