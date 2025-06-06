@@ -37,13 +37,32 @@ def oauth_login(provider: str):
 
 
 
+# @router.get("/login/{provider}/callback",
+#             summary="OAuth 콜백 처리(google, kakao, naver)",
+#             response_model=LoginResponseDto,
+#             dependencies=[Depends(get_oauth_service)],
+#             response_description="{google, kakao, naver} OAuth 콜백 처리",
+#             response_model_include={"access_token", "refresh_token","member_seq", "nickname"}
+#         )
+# async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)) :
+    
+#     return await oauth_service.handle_oauth_callback(request, provider)
+
 @router.get("/login/{provider}/callback",
             summary="OAuth 콜백 처리(google, kakao, naver)",
-            response_model=LoginResponseDto,
             dependencies=[Depends(get_oauth_service)],
-            response_description="{google, kakao, naver} OAuth 콜백 처리",
-            response_model_include={"access_token", "refresh_token","member_seq", "nickname"}
-        )
-async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)) :
-    
-    return await oauth_service.handle_oauth_callback(request, provider)
+            )
+async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)):
+    # 기존 응답 받아오기 (JSON 형태)
+    login_data = await oauth_service.handle_oauth_callback(request, provider)
+ 
+    # 딥링크 URL 구성
+    redirect_url = (
+        f"myapp://oauth/callback"
+        f"?access_token={login_data['access_token']}"
+        f"&refresh_token={login_data['refresh_token']}"
+        f"&member_seq={login_data['member_seq']}"
+        f"&nickname={login_data['nickname']}"
+    )
+ 
+    return RedirectResponse(url=redirect_url)
