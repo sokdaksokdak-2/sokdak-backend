@@ -258,26 +258,24 @@ def save_emotion_from_text(db: Session, member_seq: int, calendar_date: date, te
     db.commit()
     return new_calendar
 
-def save_emotion_calendar(db: Session, member_seq: int, emotion_seq: int, emotion_score: int, title: str, context: str, source: str):
-    ''' 챗봇 대화 내용 저장 요약
-    '''
+def save_emotion_calendar(db: Session, member_seq: int, calendar_date: date, emotion_seq: int, context: str, title: str | None = None):
     new_calendar = EmotionCalendar(
         member_seq=member_seq,
-        calendar_date=datetime.now(UTC).date(),        
+        calendar_date=calendar_date
     )
-
-    new_calendar_detail = EmotionCalendarDetail(
-        calendar_seq=new_calendar.calendar_seq,
-        member_seq=member_seq,
-        emotion_seq=emotion_seq,
-        emotion_score=emotion_score,
-        title=title,
-        context=context,
-        created_at=datetime.now(UTC),
-        source=source
-    )
-
     db.add(new_calendar)
-    db.add(new_calendar_detail)
+    db.flush()  # calendar_seq 확보
+
+    new_detail = EmotionCalendarDetail(
+        calendar_seq=new_calendar.calendar_seq,
+        emotion_seq=emotion_seq,
+        context=context,
+        title=title,
+        source="ai"
+    )
+    db.add(new_detail)
     db.commit()
+
+    return new_calendar
+
     
