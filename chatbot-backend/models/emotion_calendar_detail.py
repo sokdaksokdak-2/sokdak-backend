@@ -2,6 +2,8 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime, UTC
 from enum import Enum
+from sqlalchemy import Text, Column
+
 
 class SourceType(str, Enum):
     USER = "user"
@@ -13,7 +15,7 @@ class EmotionCalendarDetail(SQLModel, table=True):
     detail_seq: Optional[int] = Field(default=None, primary_key=True)
     emotion_score: int = Field(default=1)
     source: SourceType = Field(nullable=False, description="user | ai")
-    context: Optional[str] = Field(default=None)
+    context: Optional[str] = Field(default=None, sa_column=Column(Text))
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     title: str = Field()
 

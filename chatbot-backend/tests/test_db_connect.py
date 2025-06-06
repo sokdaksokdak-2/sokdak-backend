@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 DATABASE_URL="mysql+pymysql://campus_LGDX6_p3_1:smhrd1@project-db-campus.smhrd.com:3307/campus_LGDX6_p3_1"
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 def test_db_connection():
@@ -68,23 +68,23 @@ emotion_data = [
     ("슬픔", "sadness", "#4a7edf", "sad"),
     ("불안", "anxiety", "#FC5F15", "anxious"),
     ("화남", "anger", "#be2d35", "angry"),
-    ("중립", "neutral", "#8ED465", "neutral"),
+    ("평온", "neutral", "#8ED465", "neutral"),
 ]
 
 # 감정 강도별 데이터 생성 (1: 낮음, 2: 보통, 3: 강함)
 def generate_emotion_variants():
     emotions = []
     for name_k, name_e, color, image_name in emotion_data:
-        for score in range(1, 4):  # 1~3
-            emotions.append(
+        emotions.append(
                 Emotion(
-                    name_kr=f"{name_k}_{score}",
-                    name_en=f"{name_e}_{score}",
+                    name_kr=name_k,
+                    name_en=name_e,
                     color_code=color,
-                    character_image_url=f"assets/characters/{image_name}_{score}.png",  # Flutter 기준 asset 경로
-                    emotion_score=score
+                    character_image_url=f"assets/characters/{image_name}.png",  # Flutter 기준 asset 경로
                 )
             )
+        # for score in range(1, 4):  # 1~3
+            
     return emotions
 
 def test_insert_emotion_data():
@@ -106,12 +106,11 @@ def test_insert_emotion_data():
 
         # 🔍 검증용 쿼리
         results = session.execute(select(Emotion)).scalars().all()
-        assert len(results) == 15, f"❌ 예상한 15개 감정 중 {len(results)}개만 들어감"
-        print("✅ 감정 데이터 개수 검증 통과 (15개)")
+        assert len(results) == 5, f"❌ 예상한 5개 감정 중 {len(results)}개만 들어감"
+        print("✅ 감정 데이터 개수 검증 통과 (5개)")
 
-        joy_3 = next((e for e in results if e.name_kr == "기쁨_3"), None)
-        assert joy_3 is not None, "❌ '기쁨_3' 감정 없음"
-        assert joy_3.emotion_score == 3, "❌ '기쁨_3' emotion_score 잘못됨"
-        print("✅ '기쁨_3' 데이터 검증 통과")
+        joy = next((e for e in results if e.name_kr == "기쁨"), None)
+        assert joy is not None, "❌ '기쁨' 감정 없음"
+        print("✅ '기쁨' 데이터 검증 통과")
 
     print("🎉 전체 감정 데이터 삽입 및 검증 테스트 완료!")
