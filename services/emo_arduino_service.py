@@ -2,8 +2,11 @@ from crud import get_emotion_by_seq
 from utils import ArduinoClient
 from sqlalchemy.orm import Session
 from utils import redis_client
-
+import logging
 import json
+
+
+logger = logging.getLogger(__name__)
 
 
 class ArduinoService:
