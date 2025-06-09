@@ -8,6 +8,5 @@ class Mission(SQLModel, table=True):
     content: str = Field(nullable=False, description="미션 내용")
 
     # 외래키 - 제약조건 X
-    emotion_seq: int = Field(nullable=False, description="감정 종류") # 외래키
-
-
+    emotion_detail_seq: int = Field(nullable=False, description="감정 종류") 
+    # emotion_detail: Optional["EmotionDetail"] = Relationship()

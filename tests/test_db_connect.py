@@ -2,7 +2,7 @@
 from sqlalchemy import inspect  # SQLAlchemy의 inspect 모듈을 사용하여 DB 테이블 확인
 from sqlalchemy import text # SQLAlchemy의 text 모듈을 사용하여 SQL 쿼리 실행
 from sqlmodel import SQLModel, create_engine, select
-from models import Member, Emotion, Mission, MemberMission, EmotionCalendar, EmotionCalendarDetail, MemberOAuth
+from models import Member, Emotion, Mission, MemberMission, EmotionCalendar, EmotionCalendarDetail, MemberOAuth, EmotionDetail
 from dotenv import load_dotenv
 import os
 from sqlalchemy.orm import Session
@@ -49,6 +49,7 @@ def test_table_creation():
     expected_tables = [
         "member", 
         "emotion", 
+        "emotion_details",
         "mission", 
         "member_mission", 
         "emotion_calendar",
@@ -64,23 +65,22 @@ def test_table_creation():
 
 # 감정 이름과 캐릭터 이미지 경로 예시
 emotion_data = [
-    ("기쁨", "joy", "#FDC420", "joy"),
-    ("슬픔", "sadness", "#4a7edf", "sad"),
-    ("불안", "anxiety", "#FC5F15", "anxious"),
-    ("화남", "anger", "#be2d35", "angry"),
-    ("평온", "neutral", "#8ED465", "neutral"),
+    ("기쁨", "joy", "#FDC420"),
+    ("슬픔", "sadness", "#4a7edf"),
+    ("불안", "anxiety", "#FC5F15"),
+    ("화남", "anger", "#be2d35"),
+    ("평온", "neutral", "#8ED465"),
 ]
 
 # 감정 강도별 데이터 생성 (1: 낮음, 2: 보통, 3: 강함)
 def generate_emotion_variants():
     emotions = []
-    for name_k, name_e, color, image_name in emotion_data:
+    for name_k, name_e, color in emotion_data:
         emotions.append(
                 Emotion(
                     name_kr=name_k,
                     name_en=name_e,
                     color_code=color,
-                    character_image_url=f"assets/characters/{image_name}.png",  # Flutter 기준 asset 경로
                 )
             )
         # for score in range(1, 4):  # 1~3

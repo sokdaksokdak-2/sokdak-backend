@@ -285,3 +285,6 @@ def save_emotion_calendar(db: Session, member_seq: int, emotion_seq: int, emotio
     db.add(new_calendar)
     db.add(new_calendar_detail)
     db.commit()
+
+    return new_calendar_detail
+    
