@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
 from crud import member_mission as member_mission_crud
+from crud import mission as mission_crud
+from crud import emotion_detail as emotion_detail_crud
 from schemas.mission import MissionSeqDto
+from schemas.member_mission import MemberMissionResponseDto
 
 
 class MemberMissionService:
@@ -16,7 +19,9 @@ class MemberMissionService:
         :return: 생성된 미션 seq
         """
         member_mission = member_mission_crud.create_member_mission(self.db, member_seq, emotion_seq, emotion_score)
-        return MissionSeqDto(member_mission.mission_seq)
+        return MissionSeqDto(
+            mission_seq=member_mission.mission_seq
+        )
 
 
     def get_latest_member_mission_by_member_seq(self, member_seq: int):
@@ -25,7 +30,17 @@ class MemberMissionService:
         :param member_seq
         :return : 회원의 가장 최근 미션 정보
         """
-        return member_mission_crud.get_latest_member_mission_by_member_seq(self.db, member_seq)
+        result = member_mission_crud.get_latest_member_mission_with_details(self.db, member_seq)
+        if not result:
+            return None
+        member_mission, mission, emotion_detail = result
+        return MemberMissionResponseDto(
+            member_mission_seq=member_mission.member_mission_seq,
+            mission_seq=mission.mission_seq,
+            content=mission.content,
+            emotion_seq=emotion_detail.emotion_seq,
+            emotion_score=emotion_detail.emotion_score,
+        )
     
     def get_member_missions_by_member_seq(self, member_seq: int) :
         """

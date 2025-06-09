@@ -5,6 +5,10 @@ from models.member_mission import MemberMission
 from models.emotion_detail import EmotionDetail
 import random
 
+import logging
+
+logger = logging. getLogger(__name__)
+
 def get_member_missions_by_member_seq(db: Session, member_seq: int) -> list[MemberMission]:
     """
     주어진 member_seq에 대한 미션 목록을 조회합니다.
@@ -55,6 +59,7 @@ def create_member_mission(
         .first()
     )
     
+    
     if not emotion_detail:
         raise ValueError("해당 감정과 강도에 맞는 감정 상세 정보가 없습니다.")
     
@@ -66,22 +71,25 @@ def create_member_mission(
         .limit(7) # 최근 7개 미션 조회
         .subquery()
     )
-
+    
     # 3. 최근 수행한 미션과 중복되지 않은 미션 필터링
     available_missions = (
         db.query(Mission)
         .filter(Mission.emotion_detail_seq == emotion_detail.emotion_detail_seq)
-        .filter(Mission.mission_seq.not_in(select(recent_assigned_missions_subq.c.mission_seq)))
+        .filter(~Mission.mission_seq.in_(select(recent_assigned_missions_subq.c.mission_seq)))
         .all()
     )
 
-    if not available_missions: # 전부 최근에 수행한 미션이라면
+    if not available_missions : # 전부 최근에 수행한 미션이라면
         available_missions = (
             db.query(Mission)
             .filter(Mission.emotion_detail_seq == emotion_detail.emotion_detail_seq)
             .all()
         )
 
+    if not available_missions:
+        logger.error("해당 감정 상세에 매핑된 미션이 없습니다.")
+        raise ValueError("사용 가능한 미션이 없습니다.")
     # 4. 랜덤으로 하나 선택
     selected_mission = random.choice(available_missions)
 
@@ -96,3 +104,13 @@ def create_member_mission(
     db.refresh(member_mission)
     return member_mission
 
+def get_latest_member_mission_with_details(db: Session, member_seq: int):
+    result = (
+        db.query(MemberMission, Mission, EmotionDetail)
+        .join(Mission, MemberMission.mission_seq == Mission.mission_seq)
+        .join(EmotionDetail, Mission.emotion_detail_seq == EmotionDetail.emotion_detail_seq)
+        .filter(MemberMission.member_seq == member_seq)
+        .order_by(MemberMission.date_assigned.desc())
+        .first()
+    )
+    return result  # (MemberMission, Mission, EmotionDetail) 튜플 반환

@@ -36,7 +36,7 @@ def get_member_mission_service(db: Session = Depends(get_session)) -> MemberMiss
 @router.post("/chat",
              summary="챗봇 대화 - 이전 대화 반영 ",
              )
-async def chat_message(request: ChatRequestDto, chatbot_service: ChatbotService = Depends(get_chatbot_service)):
+async def chat_message(background_tasks: BackgroundTasks, request: ChatRequestDto, chatbot_service: ChatbotService = Depends(get_chatbot_service)):
     start_time = time.time()
     logger.info(f"✅챗봇 API 호출 시작: {round(start_time ,3)}초")
                                              
@@ -46,43 +46,30 @@ async def chat_message(request: ChatRequestDto, chatbot_service: ChatbotService 
     response = await chatbot_service.get_chatbot_response(request.member_seq, request.user_message)
     logger.info(f"✅✅챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
 
-    arduino_chatbot_response = await chatbot_service.arduino_chatbot_response(request.member_seq, response.get("emotion_seq"))
+
+    background_tasks.add_task(chatbot_service.arduino_chatbot_response, request.member_seq, response.emotion_seq)
 
     logger.info(f"✅✅챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
+    return response
 
-    return ChatResponseDto(
-        chatbot_response=response["response"],
-        emotion_seq=response["emotion_seq"],
-        emotion_score=response["emotion_score"],
-        color_code= arduino_chatbot_response or "#000000"  # 기본값 지정
-    )
-
-
-@router.post("/chat/summary/{member_seq}",
-                summary="대화 종료 후 챗봇 내용 요약",
-                status_code=200,
-            )
-async def chat_summary(member_seq: int,chatbot_service: ChatbotService = Depends(get_chatbot_service)):
-    return await chatbot_service.save_chat_diary(member_seq)
-
-@router.post("/chat/complete/{member_seq}",
+@router.post("/complete/{member_seq}",
                 summary="대화 종료 후 챗봇 내용 요약 및 미션생성",
                 status_code=200,
             )
 async def complete_chat_session(background_tasks: BackgroundTasks,
                                 member_seq: int,
                                 chatbot_service: ChatbotService = Depends(get_chatbot_service),
-                                member_mission_service: MemberMissionService = Depends(get_mission_service),
+                                member_mission_service: MemberMissionService = Depends(get_member_mission_service),
                                 ):
     chat_history = await chatbot_service.get_chat_history(member_seq)
     
     diary = await chatbot_service.save_chat_diary(member_seq, chat_history)
-    
-    member_mission = await member_mission_service.create_member_mission(member_seq, diary.emotion_seq, diary.emotion_score)
+    logger.info(f"🚨🚨🚨{diary}") 
+    member_mission = member_mission_service.create_member_mission(member_seq, diary.emotion_seq, diary.emotion_score)
 
     background_tasks.add_task(chatbot_service.delete_chat_history, member_seq)
     
-    return MissionSeqDto(member_mission)
+    return member_mission
 
 @router.post("/stream",
              summary="챗봇 대화 - 이전 대화 기억 못함",

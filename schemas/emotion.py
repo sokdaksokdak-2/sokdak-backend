@@ -6,3 +6,7 @@ class EmotionDto(BaseModel):
     color_code: str
     character_image_url: str
     emotion_description: str
+
+class EmotionSeqScoreDto(BaseModel) :
+    emotion_seq: int
+    emotion_score: int
