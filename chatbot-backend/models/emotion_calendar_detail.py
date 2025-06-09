@@ -2,6 +2,8 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime, UTC
 from enum import Enum
+from sqlalchemy import Text, Column
+
 
 class SourceType(str, Enum):
     USER = "user"

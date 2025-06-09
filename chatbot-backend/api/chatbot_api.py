@@ -41,10 +41,11 @@ async def chat_message(request: ChatRequestDto, chatbot_service: ChatbotService 
     return response
 
 @router.post("/chat/summary/{member_seq}",
-                summary="대화 종료 후 챗봇 내용 요약"
+                summary="대화 종료 후 챗봇 내용 요약",
+                status_code=200,
             )
 async def chat_summary(member_seq: int,chatbot_service: ChatbotService = Depends(get_chatbot_service)):
-    return await chatbot_service.save_chat_summary(member_seq)
+    return await chatbot_service.save_chat_diary(member_seq)
 
 @router.post("/stream",
              summary="챗봇 대화 - 이전 대화 기억 못함",

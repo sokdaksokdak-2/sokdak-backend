@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, Query
 import os
 from openai import OpenAI
-import openai
 
 from utils import OPENAI_API_KEY
 
@@ -267,6 +266,7 @@ def save_emotion_calendar(db: Session, member_seq: int, calendar_date: date, emo
     )
     db.add(new_calendar)
     db.flush()  # calendar_seq 확보
+
 
     new_detail = EmotionCalendarDetail(
         calendar_seq=new_calendar.calendar_seq,
