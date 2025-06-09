@@ -304,9 +304,8 @@ class ChatbotService:
         return latest_chat
 
 
-    async def arduino_chatbot_response(self, member_seq: int, chatbot_response_json: dict):
+    async def arduino_chatbot_response(self, member_seq: int, emotion_seq: int):
             # === 여기서 감정 변화 감지 및 색상 전송 ===
             # 감정 번호 추출 (키 이름은 실제 구조에 맞게 수정)
-            emotion_seq = chatbot_response_json["emotion_seq"]
             arduino_service = ArduinoService(self.db)
             return await arduino_service.detect_and_send_emotion_change(member_seq, emotion_seq)
