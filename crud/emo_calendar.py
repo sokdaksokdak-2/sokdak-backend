@@ -1,10 +1,12 @@
 from sqlalchemy.orm import Session
-from models import EmotionCalendar, EmotionCalendarDetail, Emotion
+from models import EmotionCalendar, EmotionCalendarDetail, Emotion, SourceType
 from schemas.emo_calendar import EmotionCalendarResponse, EmotionCalendarUpdateRequest, EmotionCalendarSummaryResponse, EmotionCalendarCreateRequest
 from sqlalchemy import func, extract
 from datetime import date, timedelta, datetime, UTC
-import os
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException, Query
 from openai import OpenAI
+import os
 
 from utils import OPENAI_API_KEY
 
@@ -149,31 +151,33 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
     """
     감정 캘린더 및 디테일 새로 생성
     """
-    # 1. EmotionCalendar 테이블에 새 레코드 추가 (기본 정보만)
+
+    # 1. EmotionCalendar 테이블에 새 레코드 추가
     new_calendar = EmotionCalendar(
         member_seq=request.member_seq,
         calendar_date=request.calendar_date,
         context=request.context,
-        character_image_url=None  # 캐릭터 이미지는 Emotion을 통해 가져오기 때문에 따로 저장 X
+        character_image_url=None  # 캐릭터 이미지는 Emotion을 통해 가져오기 때문에 저장 안 함
     )
     db.add(new_calendar)
-    db.flush()  # calendar_seq 확보를 위해 flush 실행
+    db.flush()  # calendar_seq 확보
 
     # 2. EmotionCalendarDetail 테이블에 감정 정보 추가
     new_detail = EmotionCalendarDetail(
         calendar_seq=new_calendar.calendar_seq,
-        emotion_seq=request.emotion_seq,         # 감정 종류 (예: 기쁨, 슬픔)
-        # emotion_score=request.emotion_score,     # 감정 강도 (1~2)
-        title=request.title                      # 제목은 이 테이블에 저장됨
+        emotion_seq=request.emotion_seq,
+        title=request.title,
+        source=SourceType.USER,         # ✅ 직접 작성이므로 고정
+        emotion_score=1,
+        context=request.context
+
     )
     db.add(new_detail)
-
+    
     # 3. 커밋 및 결과 반환
     db.commit()
     db.refresh(new_calendar)
     return new_calendar
-
-
 
 # 5. 캘린더 내용 삭제 (calendar_seq 기준)
 def delete_emotion_calendar(db: Session, calendar_seq: int) -> bool:

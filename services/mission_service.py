@@ -3,10 +3,10 @@ from crud import mission as mission_crud
 from schemas.mission import CreateMissionRequestDto
 
 
-class MissionService:
-    def __init__(self, db: Session):
-        self.db = db
-        self.mission_crud = mission_crud
+# class MissionService:
+#     def __init__(self, db: Session):
+#         self.db = db
+#         self.mission_crud = mission_crud
     
 
     async def get_missions(self) -> list:

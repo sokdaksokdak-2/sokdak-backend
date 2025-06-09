@@ -66,3 +66,4 @@ async def oauth_callback(provider: str, request: Request, oauth_service: OAuthSe
     )
  
     return RedirectResponse(url=redirect_url)
+

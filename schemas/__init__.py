@@ -6,6 +6,8 @@ from .emo_calendar import EmotionCalendarUpdateRequest
 from .emo_calendar import EmotionCalendarSummaryResponse
 from .emo_calendar import EmotionCalendarCreateRequest
 from .emo_calendar import EmotionCalendarFromTextRequest
+from .emo_calendar import CalendarCreateResponse
+
 
 from .emo_report import EmotionReportResponse
 

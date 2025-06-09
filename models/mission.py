@@ -10,4 +10,3 @@ class Mission(SQLModel, table=True):
     # 외래키 - 제약조건 X
     emotion_detail_seq: int = Field(nullable=False, description="감정 종류") 
     # emotion_detail: Optional["EmotionDetail"] = Relationship()
-

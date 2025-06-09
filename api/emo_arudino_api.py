@@ -4,7 +4,8 @@ from db import get_session
 from schemas import EmotionChangeRequest
 from services import ArduinoService
 
-router = APIRouter(prefix="/arduino", tags=["Arduino"])
+router = APIRouter()
+
 
 @router.post("/send-color-if-changed")
 async def send_emotion_color_if_changed(
