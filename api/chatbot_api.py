@@ -5,7 +5,7 @@ from db.session import get_session
 from services.chatbot_service import ChatbotService
 from services.mission_service import MissionService
 from services.member_mission_service import MemberMissionService
-from schemas.chatbot import StreamingChatRequestDto, ChatRequestDto
+from schemas.chatbot import StreamingChatRequestDto, ChatRequestDto, ChatResponseDto
 from schemas.mission import MissionSeqDto
 import logging
 import time
@@ -44,11 +44,18 @@ async def chat_message(request: ChatRequestDto, chatbot_service: ChatbotService 
         raise HTTPException(status_code=400, detail="member_seq 또는 user_message가 없습니다.")
     
     response = await chatbot_service.get_chatbot_response(request.member_seq, request.user_message)
-    arduino_chatbot_response = await chatbot_service.arduino_chatbot_response(request.member_seq, response.chatbot_response_json.get("emotion_seq"))
+    logger.info(f"✅✅챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
 
-    logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
+    arduino_chatbot_response = await chatbot_service.arduino_chatbot_response(request.member_seq, response.get("emotion_seq"))
 
-    return response
+    logger.info(f"✅✅챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
+
+    return ChatResponseDto(
+        chatbot_response=response["response"],
+        emotion_seq=response["emotion_seq"],
+        emotion_score=response["emotion_score"],
+        color_code= arduino_chatbot_response or "#000000"  # 기본값 지정
+    )
 
 
 @router.post("/chat/summary/{member_seq}",
