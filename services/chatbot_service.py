@@ -4,7 +4,7 @@ from utils import get_openai_client, redis_client
 import json
 
 from schemas.chatbot import ChatHistoryDto
-from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_SUMMARY_PROMP
+from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_SUMMARY_PROMPT
 
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
@@ -15,7 +15,7 @@ from typing import AsyncGenerator
 import asyncio
 from services.emo_arduino_service import ArduinoService
 
-from services.mission_service import mission_service
+# from services.mission_service import mission_service
 
 
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
@@ -30,7 +30,7 @@ class ChatbotService:
         self.db = db
         self.client = get_openai_client()
         self.redis_client = redis_client  # Redis 클라이언트 인스턴스 - 우현 추가
-        self.mission_service = mission_service
+        # self.mission_service = mission_service
 
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
