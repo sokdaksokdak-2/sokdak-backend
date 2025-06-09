@@ -1,0 +1,15 @@
+#pip install -r requirements.txt
+fastapi[standard]
+uvicorn
+sqlmodel
+pydantic
+pydantic-settings
+mysqlclient  # 또는 pymysql
+python-dotenv
+pytest
+requests
+openai
+passlib[bcrypt]
+PyJWT
+redis[async]
+pyserial
