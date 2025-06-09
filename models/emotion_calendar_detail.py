@@ -14,7 +14,9 @@ class EmotionCalendarDetail(SQLModel, table=True):
 
     detail_seq: Optional[int] = Field(default=None, primary_key=True)
     emotion_score: int = Field(default=1)
-    source: SourceType = Field(nullable=False, description="user | ai")
+
+    source: SourceType = Field(default=SourceType.USER, nullable=False, description="user | ai") # 기본값 user라고 설정
+
     context: Optional[str] = Field(default=None, sa_column=Column(Text))
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     title: str = Field()

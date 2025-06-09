@@ -5,12 +5,14 @@ from utils import redis_client
 
 import json
 
+
 class ArduinoService:
     def __init__(self, db: Session):
         self.db = db
         self.arduino = ArduinoClient()
 
     async def detect_and_send_emotion_change(self, member_seq: int, current_emotion_seq: int):
+
         # Redis에서 최근 대화 가져오기
         redis_key = f"chat_history:{member_seq}"
         history = await redis_client.lrange(redis_key, -2, -1)  # 마지막 2개 대화

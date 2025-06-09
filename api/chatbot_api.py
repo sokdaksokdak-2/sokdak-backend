@@ -8,6 +8,9 @@ from schemas.chatbot import StreamingChatRequestDto, ChatRequestDto, ChatHistory
 import logging
 import time
 from datetime import datetime
+from utils.redis_client import get_redis
+from redis.asyncio import Redis             # 이 두개도 추가한거 우현
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +20,7 @@ router = APIRouter()
 # TODO : 이후 dependencies/auth_dependencies.py 파일로 분리
 def get_chatbot_service(db: Session = Depends(get_session)) -> ChatbotService:
     return ChatbotService(db)
+  
 def get_mission_service(db: Session = Depends(get_session)) -> MissionService:
     return MissionService(db)
 
@@ -38,6 +42,7 @@ async def chat_message(request: ChatRequestDto, chatbot_service: ChatbotService 
     logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
 
     return response
+
 
 @router.post("/chat/complete/{member_seq}",
                 summary="대화 종료 후 챗봇 내용 요약 및 미션생성",
@@ -71,14 +76,13 @@ async def stream_chat(request: StreamingChatRequestDto, chatbot_service: Chatbot
 
 
 @router.post("/stream_test",
-             summary="openai 스트리밍 챗봇 대화",
+             summary="챗봇 아두이노 테스트",
               response_model=None)
-async def stream_chat_test(request: StreamingChatRequestDto, db: Session = Depends(get_session)):
+async def stream_chat_test(request: StreamingChatRequestDto, db: Session = Depends(get_session), redis_client: Redis = Depends(get_redis)):
+
     start_time = time.time()
     logger.info(f"챗봇 API 호출 시작: {round(start_time ,3)}초")
-
-
-    chatbot_service = ChatbotService(db=db, member_seq=request.member_seq)
+    chatbot_service = ChatbotService(db=db, member_seq=request.member_seq, redis_client=redis_client)
     generator = chatbot_service.stream_response(request.user_message)
 
     logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")

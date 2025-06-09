@@ -1,4 +1,5 @@
 import serial
+import time
 
 class ArduinoClient:
     def __init__(self, port='/dev/ttyUSB0', baudrate=9600):
@@ -8,9 +9,6 @@ class ArduinoClient:
         if self.ser.is_open:
             self.ser.write(color_code.encode())  # 예: "#FF0000"
 
-
-
-import time
 
 # 포트 정보 및 시리얼 설정
 def send_color_to_arduino(color_code: str):
@@ -25,3 +23,4 @@ def send_color_to_arduino(color_code: str):
         print(f"전송 완료: {color_code}")
     except Exception as e:
         print("아두이노 연결 실패:", e)
+

@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from schemas import EmotionRequest, EmotionResponse
 from services import get_color_for_emotion
-from utils import send_color_to_arduino
+from utils import send_color_to_arduino, ArduinoClient
+
 from db import get_session  # DB 세션 종속성
 
 router = APIRouter()
