@@ -8,8 +8,7 @@ from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_S
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
 from crud import emo_calendar as emo_calendar_crud
-from collections import Counter
-from services.mission_service import mission_service
+from services import mission_service
 import logging
 
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
@@ -86,7 +85,7 @@ class ChatbotService:
         logger.info(f"대화 요약 저장 - 제목: {title}, 내용: {context}, 감정: {most_common_emotion_seq}, 평균 감정 강도: {avg_emotion_score}")
 
         try :
-            emo_calendar_crud.save_emotion_calendar(
+            return emo_calendar_crud.save_emotion_calendar(
                 self.db,
                 member_seq,
                 most_common_emotion_seq,

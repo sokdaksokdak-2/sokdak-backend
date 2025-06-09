@@ -15,10 +15,10 @@ def get_member_by_email(db: Session, email: str) -> Member | None :
 def get_member_by_member_seq(db: Session, member_seq: int) -> Member | None :
     return db.query(Member). filter(Member.member_seq == member_seq).first()
 
-def update_character_name(db: Session, member: Member, new_character_name: str) :
-    member.character_name = new_character_name
-    db.commit()
-    db.refresh(member)
+# def update_character_name(db: Session, member: Member, new_character_name: str) :
+#     member.character_name = new_character_name
+#     db.commit()
+#     db.refresh(member)
 
 def update_nickname(db: Session, member: Member, new_nickname: str) :
     member.nickname = new_nickname
