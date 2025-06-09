@@ -219,9 +219,9 @@ class ChatbotService:
                 )
             # === 여기서 감정 변화 감지 및 색상 전송 ===
             # 감정 번호 추출 (키 이름은 실제 구조에 맞게 수정)
-            emotion_seq = chatbot_response_json["emotion_seq"]
-            arduino_service = ArduinoService(self.db)
-            await arduino_service.detect_and_send_emotion_change(member_seq, emotion_seq)
+            # emotion_seq = chatbot_response_json["emotion_seq"]
+            # arduino_service = ArduinoService(self.db)
+            # await arduino_service.detect_and_send_emotion_change(member_seq, emotion_seq)
             # =========================================
 
         except json.JSONDecodeError as e:
@@ -229,7 +229,7 @@ class ChatbotService:
             logger.error(f"챗봇 응답 JSON 파싱 실패: {e}")
             raise HTTPException(status_code=500, detail="챗봇 응답 JSON 파싱 실패")
 
-            
+        logger.info(f"🚨🚨{chatbot_response_json.get('emotion_seq')}")
 
         return chatbot_response_json
     

@@ -4,12 +4,12 @@ from db.session import get_session
 from services.mission_service import MissionService
 import logging
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-# router = APIRouter()
+router = APIRouter()
 
-# def get_mission_service(db: Session = Depends(get_session)) -> MissionService:
-#     return MissionService(db)
+def get_mission_service(db: Session = Depends(get_session)) -> MissionService:
+    return MissionService(db)
 
 # TODO : 미완성, 미션내용, 감정번호?, 감정강도?, 미션 배정일, 미션 완료일, 미션완료
 # GET /missions/item/{mission_seq}

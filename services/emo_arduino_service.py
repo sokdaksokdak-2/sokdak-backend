@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 from utils import redis_client
 
 import json
+import logging
 
+logger = logging.getLogger(__name__)
 
 class ArduinoService:
     def __init__(self, db: Session):
