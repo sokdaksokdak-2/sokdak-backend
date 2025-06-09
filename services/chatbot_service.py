@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 client = get_openai_client()
 
 class ChatbotService:
-    def __init__(self, db: Session): 
+    def __init__(self, db: Session, redis_client=redis_client): 
         self.db = db
         self.client = get_openai_client()
         self.redis_client = redis_client  # Redis 클라이언트 인스턴스 - 우현 추가
@@ -229,6 +229,13 @@ class ChatbotService:
                         created_at=datetime.now(),
                     ),
                 )
+            # === 여기서 감정 변화 감지 및 색상 전송 ===
+            # 감정 번호 추출 (키 이름은 실제 구조에 맞게 수정)
+            emotion_seq = chatbot_response_json["emotion_seq"]
+            arduino_service = ArduinoService(self.db)
+            await arduino_service.detect_and_send_emotion_change(member_seq, emotion_seq)
+            # =========================================
+
         except json.JSONDecodeError as e:
             # JSON 파싱 실패 시 에러 로그 출력
             logger.error(f"챗봇 응답 JSON 파싱 실패: {e}")

@@ -3,8 +3,6 @@ from sqlalchemy.orm import Session
 from schemas import EmotionRequest, EmotionResponse
 from services import get_color_for_emotion
 from utils import ArduinoClient
-from utils import send_color_to_arduino
-
 from db import get_session  # DB 세션 종속성
 
 router = APIRouter()
@@ -15,7 +13,6 @@ def apply_emotion_color(req: EmotionRequest, db: Session = Depends(get_session))
 
     arduino_client = ArduinoClient()
     arduino_client.send_color(color)
-    send_color_to_arduino(color)
     return EmotionResponse(color_code=color)
 
 @router.post("/test/send-color")
