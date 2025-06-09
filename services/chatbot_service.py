@@ -1,8 +1,5 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from typing import AsyncGenerator
-import asyncio
-from services.emo_arduino_service import ArduinoService
 from utils.gpt_token_manager import get_openai_client
 from utils.redis_client import redis_client
 import json
@@ -11,28 +8,21 @@ from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_S
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
 from crud import emo_calendar as emo_calendar_crud
-from services import mission_service
+from collections import Counter
+from services.mission_service import mission_service
 import logging
-from typing import AsyncGenerator
-import asyncio
-from services.emo_arduino_service import ArduinoService
-
-
 
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
 HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
-
 
 logger = logging. getLogger(__name__)
 client = get_openai_client()
 
 class ChatbotService:
-    def __init__(self, db: Session, redis_client=redis_client): 
+    def __init__(self, db: Session):
         self.db = db
         self.client = get_openai_client()
-        self.redis_client = redis_client  # Redis 클라이언트 인스턴스 - 우현 추가
         self.mission_service = mission_service
-
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
         '''
@@ -57,7 +47,6 @@ class ChatbotService:
     async def save_chat_diary(self, member_seq: int, chat_history: list[ChatHistoryDto]):
         '''대화 종료 후 대화 내용 요약 저장
         '''
-
         if not chat_history:
             logger.info(f"[{member_seq}] 저장할 대화 내용이 없습니다.")
             return
@@ -97,7 +86,7 @@ class ChatbotService:
         logger.info(f"대화 요약 저장 - 제목: {title}, 내용: {context}, 감정: {most_common_emotion_seq}, 평균 감정 강도: {avg_emotion_score}")
 
         try :
-            return emo_calendar_crud.save_emotion_calendar(
+            emo_calendar_crud.save_emotion_calendar(
                 self.db,
                 member_seq,
                 most_common_emotion_seq,
@@ -106,11 +95,10 @@ class ChatbotService:
                 context,
                 "ai"
             )
+
         except Exception as e:
             logger.error(f"대화 요약 저장 실패 : {e}")
             raise HTTPException(status_code=500, detail="대화 요약 저장 실패")
-        
-
              
     async def save_chat_history(self, member_seq: int, recode: ChatHistoryDto):
         '''사용자 상태 저장 - 현재 대화 내역
@@ -217,19 +205,12 @@ class ChatbotService:
                         created_at=datetime.now(),
                     ),
                 )
-            # === 여기서 감정 변화 감지 및 색상 전송 ===
-            # 감정 번호 추출 (키 이름은 실제 구조에 맞게 수정)
-            # emotion_seq = chatbot_response_json["emotion_seq"]
-            # arduino_service = ArduinoService(self.db)
-            # await arduino_service.detect_and_send_emotion_change(member_seq, emotion_seq)
-            # =========================================
-
         except json.JSONDecodeError as e:
             # JSON 파싱 실패 시 에러 로그 출력
             logger.error(f"챗봇 응답 JSON 파싱 실패: {e}")
             raise HTTPException(status_code=500, detail="챗봇 응답 JSON 파싱 실패")
 
-        logger.info(f"🚨🚨{chatbot_response_json.get('emotion_seq')}")
+            
 
         return chatbot_response_json
     
@@ -260,52 +241,4 @@ class ChatbotService:
 
         
         return response_json.get("response")
-
-    
-    async def send_emotion_to_arduino_if_changed(
-            self,
-            member_seq: int,
-            current_emotion_seq: int,
-        ):
-            # 최근 대화 내역에서 이전 감정 seq 가져오기
-            chat_history = await self.get_chat_history(member_seq, limit=2)
-            previous_emotion_seq = None
-            if chat_history:
-                last_response = chat_history[-2].chatbot_response
-                if last_response:
-                    previous_emotion_seq = last_response.get("emotion_seq")
-            else:
-                # 대화가 1개 밖에 없으면 그걸 이전 감정으로 간주
-                last_response = chat_history[-1].chatbot_response
-                if last_response:
-                    previous_emotion_seq = last_response.get("emotion_seq")
-
-              # 로그 출력
-            logger.info(f"[Arduino] 이전 감정 seq: {previous_emotion_seq}, 현재 감정 seq: {current_emotion_seq}")
-
-            arduino_service = ArduinoService(self.db)
-
-            await arduino_service.send_color_if_emotion_changed(
-                member_seq=member_seq,
-                current_emotion_seq=current_emotion_seq,
-                previous_emotion_seq=previous_emotion_seq,
-            )
-
-    async def test_get_latest_chat_history(self, member_seq: int):
-        key = REDIS_CHAT_HISTORY_KEY.format(member_seq)
-        # 최근 1개를 가져옴
-        chat_history = await redis_client.lrange(key, 0, -2)  # -1부터 -1까지, 가장 마지막 아이템 1개
-        if not chat_history:
-            logger.info("채팅 내역 없음")
-            return None
-
-        # Redis에서 가져온 값은 바이트 문자열일 수 있으니 디코딩 필요하면 decode()
-        latest_history_json = chat_history[0]
-        if isinstance(latest_history_json, bytes):
-            latest_history_json = latest_history_json.decode('utf-8')
-
-        latest_chat = ChatHistoryDto(**json.loads(latest_history_json))
-        logger.info(f"최신 대화 내역: {latest_chat}")
-        return latest_chat
-
 
