@@ -10,3 +10,4 @@ class Mission(SQLModel, table=True):
     # 외래키 - 제약조건 X
     emotion_seq: int = Field(nullable=False, description="감정 종류") # 외래키
 
+

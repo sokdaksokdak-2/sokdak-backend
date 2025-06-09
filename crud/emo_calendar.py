@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, Query
 from openai import OpenAI
 import os
+
 from utils import OPENAI_API_KEY
 
 
@@ -150,8 +151,8 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
     """
     감정 캘린더 및 디테일 새로 생성
     """
-    # 1. EmotionCalendar 테이블에 새 레코드 추가
 
+    # 1. EmotionCalendar 테이블에 새 레코드 추가
     new_calendar = EmotionCalendar(
         member_seq=request.member_seq,
         calendar_date=request.calendar_date,
@@ -161,7 +162,6 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
     db.add(new_calendar)
     db.flush()  # calendar_seq 확보
 
-
     # 2. EmotionCalendarDetail 테이블에 감정 정보 추가
     new_detail = EmotionCalendarDetail(
         calendar_seq=new_calendar.calendar_seq,
@@ -170,14 +170,14 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
         source=SourceType.USER,         # ✅ 직접 작성이므로 고정
         emotion_score=1,
         context=request.context
+
     )
     db.add(new_detail)
-
+    
     # 3. 커밋 및 결과 반환
     db.commit()
     db.refresh(new_calendar)
     return new_calendar
-
 
 # 5. 캘린더 내용 삭제 (calendar_seq 기준)
 def delete_emotion_calendar(db: Session, calendar_seq: int) -> bool:
@@ -285,5 +285,3 @@ def save_emotion_calendar(db: Session, member_seq: int, emotion_seq: int, emotio
     db.add(new_calendar)
     db.add(new_calendar_detail)
     db.commit()
-
-    
