@@ -1,5 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from typing import AsyncGenerator
+import asyncio
+from services.emo_arduino_service import ArduinoService
 from utils.gpt_token_manager import get_openai_client
 from utils.redis_client import redis_client
 import json
@@ -8,10 +11,11 @@ from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_S
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
 from crud import emo_calendar as emo_calendar_crud
-from collections import Counter
-from services.mission_service import mission_service
+from services.mission_service import MissionService
 import logging
-
+from typing import AsyncGenerator
+import asyncio
+from services.emo_arduino_service import ArduinoService
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
 HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
 
@@ -22,7 +26,7 @@ class ChatbotService:
     def __init__(self, db: Session):
         self.db = db
         self.client = get_openai_client()
-        self.mission_service = mission_service
+        self.mission_service = MissionService
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
         '''
@@ -292,9 +296,8 @@ class ChatbotService:
         return latest_chat
 
 
-    async def arduino_chatbot_response(self, member_seq: int, chatbot_response_json: dict):
+    async def arduino_chatbot_response(self, member_seq: int, emotion_seq: int):
             # === 여기서 감정 변화 감지 및 색상 전송 ===
             # 감정 번호 추출 (키 이름은 실제 구조에 맞게 수정)
-            emotion_seq = chatbot_response_json["emotion_seq"]
             arduino_service = ArduinoService(self.db)
             return await arduino_service.detect_and_send_emotion_change(member_seq, emotion_seq)
