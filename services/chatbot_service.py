@@ -11,28 +11,22 @@ from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_S
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
 from crud import emo_calendar as emo_calendar_crud
-from services import mission_service
+from services.mission_service import MissionService
 import logging
 from typing import AsyncGenerator
 import asyncio
 from services.emo_arduino_service import ArduinoService
-
-
-
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
 HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
-
 
 logger = logging. getLogger(__name__)
 client = get_openai_client()
 
 class ChatbotService:
-    def __init__(self, db: Session, redis_client=redis_client): 
+    def __init__(self, db: Session):
         self.db = db
         self.client = get_openai_client()
-        self.redis_client = redis_client  # Redis 클라이언트 인스턴스 - 우현 추가
-        self.mission_service = mission_service
-
+        self.mission_service = MissionService
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
         '''
@@ -57,7 +51,6 @@ class ChatbotService:
     async def save_chat_diary(self, member_seq: int, chat_history: list[ChatHistoryDto]):
         '''대화 종료 후 대화 내용 요약 저장
         '''
-
         if not chat_history:
             logger.info(f"[{member_seq}] 저장할 대화 내용이 없습니다.")
             return
@@ -97,7 +90,7 @@ class ChatbotService:
         logger.info(f"대화 요약 저장 - 제목: {title}, 내용: {context}, 감정: {most_common_emotion_seq}, 평균 감정 강도: {avg_emotion_score}")
 
         try :
-            return emo_calendar_crud.save_emotion_calendar(
+            emo_calendar_crud.save_emotion_calendar(
                 self.db,
                 member_seq,
                 most_common_emotion_seq,
@@ -106,11 +99,10 @@ class ChatbotService:
                 context,
                 "ai"
             )
+
         except Exception as e:
             logger.error(f"대화 요약 저장 실패 : {e}")
             raise HTTPException(status_code=500, detail="대화 요약 저장 실패")
-        
-
              
     async def save_chat_history(self, member_seq: int, recode: ChatHistoryDto):
         '''사용자 상태 저장 - 현재 대화 내역

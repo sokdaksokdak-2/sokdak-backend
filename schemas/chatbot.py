@@ -8,10 +8,11 @@ class ChatRequestDto(BaseModel):
     member_seq: int
     user_message: str
 
-# # TODO : 챗봇 응답 형식
-# class ChatResponseDto(BaseModel):
-#     chatbot_response: str
-#     emotion_seq: int
+class ChatResponseDto(BaseModel):
+    chatbot_response: str
+    emotion_seq: int
+    emotion_score: int
+    color_code : str = "#000000"  # 또는 적절한 기본 색상
 
 class EmotionAnalysisResponseDto(BaseModel):
     emotion_seq: int
