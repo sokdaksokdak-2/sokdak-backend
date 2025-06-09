@@ -51,6 +51,7 @@ def oauth_login(provider: str):
 @router.get("/login/{provider}/callback",
             summary="OAuth 콜백 처리(google, kakao, naver)",
             dependencies=[Depends(get_oauth_service)],
+
             )
 async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)):
     # 기존 응답 받아오기 (JSON 형태)
@@ -66,3 +67,4 @@ async def oauth_callback(provider: str, request: Request, oauth_service: OAuthSe
     )
  
     return RedirectResponse(url=redirect_url)
+

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from schemas.emotion import EmotionDto
 from datetime import datetime
+from typing import Union, Dict, Any
 import json
 
 
@@ -33,3 +34,10 @@ class ChatHistoryDto(BaseModel):
     # emotion_score: int
     created_at: datetime
     # character_name: str | None = None
+
+class ChatHistoryDto01(BaseModel):
+    user_message: str
+    chatbot_response: Union[Dict[str, Any], str]
+    # emotion_seq: int
+    # emotion_score: int
+    created_at: datetime
