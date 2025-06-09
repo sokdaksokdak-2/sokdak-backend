@@ -5,7 +5,10 @@ import json
 
 from schemas.chatbot import ChatHistoryDto, ChatHistoryDto01
 from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_SUMMARY_PROMPT
+<<<<<<< HEAD
 
+=======
+>>>>>>> 58ed57b (feat: 챗봇 서비스에 아두이노 감정 전송 기능 추가 및 대화 내역 처리 개선)
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
 from crud import emo_calendar as emo_calendar_crud
@@ -17,18 +20,18 @@ from utils.redis_client import redis_client
 from services.emo_arduino_service import ArduinoService
 
 
+
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
 HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
 
-logger = logging. getLogger(__name__)
+logger = logging.getLogger(__name__)
 client = get_openai_client()
 
 class ChatbotService:
-    def __init__(self, redis_client: redis_client, db: Session, member_seq: int): # , member_seq: int 이것도임 ㅇㅇ
+    def __init__(self, db: Session): 
         self.db = db
-        self.member_seq = member_seq  # 우현- 추가한거 나중에 삭제하던가
         self.client = get_openai_client()
-        self.redis_client = redis_client  # 이거도 우현 추가한거
+        self.redis_client = redis_client  # Redis 클라이언트 인스턴스 - 우현 추가
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
         '''
@@ -250,162 +253,49 @@ class ChatbotService:
 
         
         return response_json.get("response")
-
-
-
-    # 이 아래로 우현이가 추가한 코드 ㅇㅇ
-    from schemas.chatbot import ChatHistoryDto01
-    async def stream_response(self, user_message: str) -> AsyncGenerator[str, None]:
-        """
-        사용자 메시지에 대해 GPT 모델로부터 스트리밍 응답을 생성 및 저장
-        """
-        # 1. 최근 대화 불러오기
-        chat_history = await self.get_chat_history(self.member_seq, HISTORY_LIMIT)
-
-        # 2. 프롬프트 구성
-        prompt = self.build_chatbot_prompt_test_(user_message, chat_history)
-
-        # 3. OpenAI 스트리밍 호출
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=prompt,
-            temperature=1.0,
-            stream=True,
-        )
-
-        # 4. 스트리밍 응답 yield
-        full_response = ""
-        for chunk in response:
-            delta = chunk.choices[0].delta
-            if hasattr(delta, "content") and delta.content:
-                content = delta.content
-                full_response += content
-                yield f"data: {content}\n\n"
-            await asyncio.sleep(0)
-
-        # 5. 감정 분석
-        emotion_prompt = self.build_emotion_prompt(user_message)
-        emotion_result = await self.call_openai(emotion_prompt, model="gpt-3.5-turbo", temperature=0.3)
-
-        # 초기값 설정
-        emotion_seq = 1
-        emotion_score = 1
-
-        try:
-            emotion_data = json.loads(emotion_result)
-            emotion_seq = emotion_data.get("emotion_seq") or 1
-            emotion_score = emotion_data.get("emotion_intensity") or 1
-        except json.JSONDecodeError as e:
-            logger.warning(f"감정 분석 실패: {e}")
-
-        # 아두이노 감정 변화 전송
-        try:
-            arduino_service = ArduinoService(self.db)
-            await arduino_service.detect_and_send_emotion_change(
-                member_seq=self.member_seq,
-                current_emotion_seq=emotion_seq  # ✅ None 방지됨
-            )
-        except Exception as e:
-            logger.warning(f"아두이노 전송 실패: {e}")
-
-        # Redis 저장
-        try:
-            chatbot_response_json = {
-                "response": full_response.strip(),
-                "emotion_seq": emotion_seq,
-                "emotion_score": emotion_score
-            }
-
-            await self.save_chat_history(
-                self.member_seq,
-                ChatHistoryDto01(
-                    user_message=user_message,
-                    chatbot_response=chatbot_response_json,
-                    created_at=datetime.now(),
-                )
-            )
-        except Exception as e:
-            logger.warning(f"스트리밍 응답 저장 중 예외 발생: {e}")
-
-    async def save_chat_history(self, member_seq: int, recode: ChatHistoryDto01):
-        key = f"chat_history:{member_seq}"
-        recode_dict = recode.model_dump()
-
-        # datetime을 문자열로 변환
-        recode_dict["created_at"] = recode_dict["created_at"].isoformat()
-
-        # ✅ 여기에 이중 직렬화 방지 코드 추가
-        if isinstance(recode_dict.get("chatbot_response"), dict):
-            pass  # dict라면 OK
-        elif isinstance(recode_dict.get("chatbot_response"), str):
-            try:
-                recode_dict["chatbot_response"] = json.loads(recode_dict["chatbot_response"])
-            except Exception:
-                logger.warning("chatbot_response가 dict 아님. 그대로 저장.")
-
-        # Redis에 저장
-        await self.redis_client.lpush(key, json.dumps(recode_dict))
-        await self.redis_client.ltrim(key, 0, HISTORY_LIMIT - 1)
     
-    async def get_chat_history(self, member_seq: int, limit: int = 5) -> list[ChatHistoryDto]:
-        key = f"chat_history:{member_seq}"
-        raw_history = await self.redis_client.lrange(key, 0, limit - 1)
+    async def send_emotion_to_arduino_if_changed(
+            self,
+            member_seq: int,
+            current_emotion_seq: int,
+        ):
+            # 최근 대화 내역에서 이전 감정 seq 가져오기
+            chat_history = await self.get_chat_history(member_seq, limit=2)
+            previous_emotion_seq = None
+            if chat_history:
+                last_response = chat_history[-2].chatbot_response
+                if last_response:
+                    previous_emotion_seq = last_response.get("emotion_seq")
+            else:
+                # 대화가 1개 밖에 없으면 그걸 이전 감정으로 간주
+                last_response = chat_history[-1].chatbot_response
+                if last_response:
+                    previous_emotion_seq = last_response.get("emotion_seq")
 
-        history = []
-        for item in raw_history:
-            parsed = json.loads(item)
+              # 로그 출력
+            logger.info(f"[Arduino] 이전 감정 seq: {previous_emotion_seq}, 현재 감정 seq: {current_emotion_seq}")
 
-            # ✅ chatbot_response가 문자열이면 dict로 파싱
-            if isinstance(parsed.get("chatbot_response"), str):
-                try:
-                    parsed["chatbot_response"] = json.loads(parsed["chatbot_response"])
-                except json.JSONDecodeError:
-                    logger.warning("chatbot_response JSON 파싱 실패")
+            arduino_service = ArduinoService(self.db)
 
-            # ✅ created_at을 datetime으로 변환
-            if isinstance(parsed.get("created_at"), str):
-                parsed["created_at"] = datetime.fromisoformat(parsed["created_at"])
+            await arduino_service.send_color_if_emotion_changed(
+                member_seq=member_seq,
+                current_emotion_seq=current_emotion_seq,
+                previous_emotion_seq=previous_emotion_seq,
+            )
 
-            # ✅ Pydantic DTO로 파싱
-            try:
-                history.append(ChatHistoryDto(**parsed))
-            except Exception as e:
-                logger.warning(f"ChatHistoryDto 파싱 실패: {e} / 데이터: {parsed}")
+    async def test_get_latest_chat_history(self, member_seq: int):
+        key = REDIS_CHAT_HISTORY_KEY.format(member_seq)
+        # 최근 1개를 가져옴
+        chat_history = await redis_client.lrange(key, 0, -2)  # -1부터 -1까지, 가장 마지막 아이템 1개
+        if not chat_history:
+            logger.info("채팅 내역 없음")
+            return None
 
-        return list(reversed(history))
+        # Redis에서 가져온 값은 바이트 문자열일 수 있으니 디코딩 필요하면 decode()
+        latest_history_json = chat_history[0]
+        if isinstance(latest_history_json, bytes):
+            latest_history_json = latest_history_json.decode('utf-8')
 
-
-    def build_chatbot_prompt_test_(self, user_message: str, chat_history: list[ChatHistoryDto] | None = None):
-        '''
-        챗봇 응답 생성
-        '''
-        prompt = [{"role": "system", "content": CHAT_PROMPT}]
-
-        for record in chat_history:
-            # 🔒 안전한 chatbot_response 파싱
-            response = record.chatbot_response
-            if isinstance(response, str):
-                try:
-                    response = json.loads(response)
-                except json.JSONDecodeError:
-                    logger.warning(f"chatbot_response 디코딩 실패: {response}")
-                    response = {}
-            elif not isinstance(response, dict):
-                logger.warning("chatbot_response가 dict가 아님. 기본값 사용.")
-                response = {}
-
-            # 안전하게 값 추출
-            emotion_seq = response.get("emotion_seq")
-            emotion_score = response.get("emotion_score")
-
-            # 감정명과 강도 매핑
-            emotion_name = EMOTION_NAME_MAP.get(emotion_seq, "알 수 없음")
-            emotion_strength = STRENGTH_MAP.get(emotion_score, "알 수 없음")
-
-            # 프롬프트 구성
-            prompt.append({"role": "user", "content": f"{record.user_message} (감정: {emotion_name}, 강도: {emotion_strength})"})
-            prompt.append({"role": "assistant", "content": json.dumps(response, ensure_ascii=False)})
-            logger.info(f"{record}")
-
-        prompt.append({"role": "user", "content": user_message})
-        return prompt
+        latest_chat = ChatHistoryDto(**json.loads(latest_history_json))
+        logger.info(f"최신 대화 내역: {latest_chat}")
+        return latest_chat
