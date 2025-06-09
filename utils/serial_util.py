@@ -1,5 +1,8 @@
 import serial
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ArduinoClient:
     def __init__(self, port='COM4', baudrate=9600, timeout=1):

@@ -44,6 +44,7 @@ async def chat_message(request: ChatRequestDto, chatbot_service: ChatbotService 
         raise HTTPException(status_code=400, detail="member_seq 또는 user_message가 없습니다.")
     
     response = await chatbot_service.get_chatbot_response(request.member_seq, request.user_message)
+    arduino_chatbot_response = await chatbot_service.arduino_chatbot_response(request.member_seq, response.chatbot_response_json.get("emotion_seq"))
 
     logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
 
