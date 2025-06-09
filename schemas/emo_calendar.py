@@ -36,8 +36,6 @@ class EmotionCalendarFromTextRequest(BaseModel):
     text: str
     title: Optional[str] = None
 
-
-
 ### 추가
 class CalendarCreateResponse(BaseModel):
     calendar_seq: int
@@ -46,3 +44,4 @@ class CalendarCreateResponse(BaseModel):
     title: str
     context: str
     emotion_seq: int
+

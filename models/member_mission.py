@@ -17,4 +17,3 @@ class MemberMission(SQLModel, table=True):
     # 다대다 관계 테이블 이므로 member_seq, mission_seq 반드시 필요
     mission_seq: int = Field(nullable=False)
     member_seq: int = Field(nullable=True) # DB에 저장된 미션, GPT를 이용해 생성한 미션 2가지 경우 존재
-

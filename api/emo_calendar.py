@@ -5,7 +5,6 @@ from schemas import (
     EmotionCalendarResponse, EmotionCalendarUpdateRequest,
     EmotionCalendarSummaryResponse, EmotionCalendarCreateRequest,
     EmotionCalendarFromTextRequest, CalendarCreateResponse
-
 )
 from typing import List
 from datetime import date
@@ -69,6 +68,7 @@ def update_emo_calendar(
     return {"message": "Update successful", "calendar_seq": calendar_seq}
 
 
+
 # 4. 캘린더에 새로운 내용 입력 (사용자가 감정, 메모, 제목 직접 입력
 @router.post("/", response_model=CalendarCreateResponse)
 
@@ -89,6 +89,7 @@ def create_calendar_entry_api(
         "title": request.title,
         "context": request.context,
         "emotion_seq": request.emotion_seq
+
 
     }
 

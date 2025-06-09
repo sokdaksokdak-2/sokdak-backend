@@ -1,8 +1,5 @@
 import serial
 import time
-import logging
-
-logger = logging.getLogger(__name__)
 
 class ArduinoClient:
     def __init__(self, port='COM4', baudrate=9600, timeout=1):
@@ -34,20 +31,9 @@ class ArduinoClient:
             self.ser = None
             
     def send_color(self, color_code: str):
-        if not self.ser or not self.ser.is_open:
-            logger.warning("Serial port not open. Reconnecting...")
-            self._connect()
-            if not self.ser:
-                logger.error("Cannot send color - serial connection failed.")
-                return
+        if self.ser.is_open:
+            self.ser.write(color_code.encode())  # 예: "#FF0000"
 
-        try:
-            message = f"{color_code}\n"
-            self.ser.write(message.encode())
-            self.ser.flush()
-            logger.info(f"Sent color code to Arduino: {color_code}")
-        except Exception as e:
-            logger.error(f"Failed to send color code: {e}")
 
     # 포트 정보 및 시리얼 설정
     def send_color_to_arduino(color_code: str):

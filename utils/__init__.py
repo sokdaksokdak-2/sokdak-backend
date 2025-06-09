@@ -1,5 +1,4 @@
 from .gpt_token_manager import OPENAI_API_KEY
-from .gpt_token_manager import get_openai_client
 
 from .gpt import generate_emotion_prompt
 from .gpt import analyze_emotion_from_text

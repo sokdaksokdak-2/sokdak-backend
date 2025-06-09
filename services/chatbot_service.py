@@ -1,28 +1,30 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from utils import get_openai_client, redis_client
+from typing import AsyncGenerator
+import asyncio
+from services.emo_arduino_service import ArduinoService
+from utils.gpt_token_manager import get_openai_client
+from utils.redis_client import redis_client
 import json
-
 from schemas.chatbot import ChatHistoryDto
 from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_SUMMARY_PROMPT
-
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
-from crud import emo_calendar
+from crud import emo_calendar as emo_calendar_crud
 from collections import Counter
+from services.mission_service import MissionService
 import logging
 from typing import AsyncGenerator
 import asyncio
 from services.emo_arduino_service import ArduinoService
 
-# from services.mission_service import mission_service
 
 
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
 HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
 
 
-logger = logging.getLogger(__name__)
+logger = logging. getLogger(__name__)
 client = get_openai_client()
 
 class ChatbotService:
@@ -30,7 +32,7 @@ class ChatbotService:
         self.db = db
         self.client = get_openai_client()
         self.redis_client = redis_client  # Redis 클라이언트 인스턴스 - 우현 추가
-        # self.mission_service = mission_service
+        self.mission_service = mission_service
 
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
@@ -53,14 +55,9 @@ class ChatbotService:
         #     logger.info(f"{item}")
         return chat_history_list
         
-
-    # TODO : 대화 내용 요약 저장 수정
-    async def save_chat_diary(self, member_seq: int):
+    async def save_chat_diary(self, member_seq: int, chat_history: list[ChatHistoryDto]):
         '''대화 종료 후 대화 내용 요약 저장
         '''
-        key = REDIS_CHAT_HISTORY_KEY.format(member_seq)
-        chat_history = await self.get_chat_history(member_seq)
-
 
         if not chat_history:
             logger.info(f"[{member_seq}] 저장할 대화 내용이 없습니다.")
@@ -79,12 +76,6 @@ class ChatbotService:
                 user_messages.append(f"{user_message} (감정: {emotion_seq}, 강도: {emotion_score})")
                 emotion_list.append(emotion_seq)
                 emotion_score_list.append(emotion_score)
-
-        logger.info(user_messages)
-        logger.info(emotion_list)
-        logger.info(emotion_score_list)
-
-
 
         # 대화 내용 요약, 감정 - openai 호출
         diary_prompt = self.build_diary_prompt(chat_history)
@@ -107,7 +98,8 @@ class ChatbotService:
         logger.info(f"대화 요약 저장 - 제목: {title}, 내용: {context}, 감정: {most_common_emotion_seq}, 평균 감정 강도: {avg_emotion_score}")
 
         try :
-            emo_calendar.save_emotion_calendar(
+
+            emo_calendar_crud.save_emotion_calendar(
                 self.db,
                 member_seq,
                 most_common_emotion_seq,
@@ -116,12 +108,11 @@ class ChatbotService:
                 context,
                 "ai"
             )
-
-
         except Exception as e:
             logger.error(f"대화 요약 저장 실패 : {e}")
             raise HTTPException(status_code=500, detail="대화 요약 저장 실패")
         
+
              
     async def save_chat_history(self, member_seq: int, recode: ChatHistoryDto):
         '''사용자 상태 저장 - 현재 대화 내역
@@ -151,7 +142,6 @@ class ChatbotService:
         key = REDIS_CHAT_HISTORY_KEY.format(member_seq)
         redis_client.delete(key)
         logger.info(f"💬 대화 내역 삭제 : {key}")
-
 
     def build_emotion_prompt(self, user_message: str):
         '''사용자 메시지에 따른 감정 분류
@@ -319,4 +309,5 @@ class ChatbotService:
         latest_chat = ChatHistoryDto(**json.loads(latest_history_json))
         logger.info(f"최신 대화 내역: {latest_chat}")
         return latest_chat
+
 
