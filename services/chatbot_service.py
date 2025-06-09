@@ -6,11 +6,13 @@ from services.emo_arduino_service import ArduinoService
 from utils.gpt_token_manager import get_openai_client
 from utils.redis_client import redis_client
 import json
-from schemas.chatbot import ChatHistoryDto
+from schemas.chatbot import ChatHistoryDto, ChatResponseDto
 from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_SUMMARY_PROMPT
 from datetime import datetime
-from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
+from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP, EMOTION_COLOR_MAP
 from crud import emo_calendar as emo_calendar_crud
+from crud import emotion as emotion_crud
+from schemas import EmotionSeqScoreDto
 from services.mission_service import MissionService
 import logging
 from typing import AsyncGenerator
@@ -71,9 +73,9 @@ class ChatbotService:
 
         # 대화 내용 요약, 감정 - openai 호출
         diary_prompt = self.build_diary_prompt(chat_history)
-        diary = await self.call_openai(diary_prompt, "gpt-4o-mini")
-        logger.info(f"응답 : {diary}")
-        diary_json = json.loads(diary)
+        diary_response = await self.call_openai(diary_prompt, "gpt-4o-mini")
+        logger.info(f"✅✅✅응답 : {diary_response}")
+        diary_json = json.loads(diary_response)
         title = diary_json.get("title")
         context = diary_json.get("diary")
         most_common_emotion_seq = diary_json.get("emotion_seq")
@@ -87,7 +89,7 @@ class ChatbotService:
 
         # logger.info(f"가장 많이 등장한 감정 : {most_common_emotion_seq}, 평균 감정 강도 : {avg_emotion_score}")
 
-        logger.info(f"대화 요약 저장 - 제목: {title}, 내용: {context}, 감정: {most_common_emotion_seq}, 평균 감정 강도: {avg_emotion_score}")
+        logger.info(f"🚨🚨🚨대화 요약 저장 - 제목: {title}, 내용: {context}, 감정: {most_common_emotion_seq}, 평균 감정 강도: {avg_emotion_score}")
 
         try :
             emo_calendar_crud.save_emotion_calendar(
@@ -99,7 +101,10 @@ class ChatbotService:
                 context,
                 "ai"
             )
-
+            return EmotionSeqScoreDto(
+                emotion_seq=most_common_emotion_seq,
+                emotion_score=avg_emotion_score
+            )
         except Exception as e:
             logger.error(f"대화 요약 저장 실패 : {e}")
             raise HTTPException(status_code=500, detail="대화 요약 저장 실패")
@@ -210,15 +215,16 @@ class ChatbotService:
                     ),
                 )
            
-
         except json.JSONDecodeError as e:
             # JSON 파싱 실패 시 에러 로그 출력
             logger.error(f"챗봇 응답 JSON 파싱 실패: {e}")
             raise HTTPException(status_code=500, detail="챗봇 응답 JSON 파싱 실패")
 
-            
-
-        return chatbot_response_json
+        return ChatResponseDto(
+        chatbot_response=chatbot_response_json["response"],
+        emotion_seq=chatbot_response_json["emotion_seq"],
+        emotion_score=chatbot_response_json["emotion_score"],
+        )
     
     # GPT 모델 호출
     async def call_openai(self, prompt: str, model: str = "gpt-3.5-turbor", temperature: float = 1.0):
