@@ -116,7 +116,7 @@ class ChatbotService:
         # 테스트용: color_code는 파라미터에서 직접 받거나 기본값 사용
         
         try:
-            bt_serial = serial.Serial('COM5', 9600, timeout=1)
+            bt_serial = serial.Serial('COM4', 9600, timeout=1)
             bt_serial.write((color_code + "\n").encode('ascii'))
             print(f"✅ 블루투스로 색상 전송 완료: {color_code}")
             print(f"🔵 전송 문자열: {(color_code + '\n').encode('ascii')}")

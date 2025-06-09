@@ -1,7 +1,7 @@
-import redis.asyncio as redis
+import redis.asyncio as aioredis
 from core.config import settings
 
-redis_client = redis.Redis(
+redis_client = aioredis.Redis(
     host=settings.redis_host,
     port=settings.redis_port,
     db=settings.redis_db,
@@ -14,6 +14,6 @@ redis_client = redis.Redis(
 ### 이거도 추가 우현
 
 # FastAPI Depends로 주입할 함수
-def get_redis() -> redis:
+def get_redis() -> aioredis.Redis:
     return redis_client
 
