@@ -12,7 +12,7 @@ from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP
 from crud import emo_calendar as emo_calendar_crud
 from collections import Counter
-from services.mission_service import mission_service
+# from services.mission_service import MissionService
 import logging
 
 
@@ -28,7 +28,7 @@ class ChatbotService:
         self.db = db
         self.client = get_openai_client()
         self.redis_client = redis_client  # Redis 클라이언트 인스턴스 - 우현 추가
-        self.mission_service = mission_service
+        # self.mission_service = MissionService
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
         '''

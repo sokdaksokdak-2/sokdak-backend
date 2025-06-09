@@ -15,7 +15,7 @@ from .oauth_api import router as oauth_router
 from .chatbot_api import router as chatbot_router
 from .emo_led import router as emo_led_router
 from .emo_arudino_api import router as emo_arduino_router
-from .mission_api import router as mission_router
+# from .mission_api import router as mission_router
 
 # APIRouter 인스턴스 생성
 api_router = APIRouter()
@@ -32,4 +32,4 @@ api_router.include_router(oauth_router, prefix="/oauth", tags=["OAuth"])
 api_router.include_router(chatbot_router, prefix="/chatbot", tags=["chatbot"])
 api_router.include_router(emo_led_router, prefix="/emo_led", tags=["emotion_led"])
 api_router.include_router(emo_arduino_router, prefix="/arduino", tags=["Arduino"])
-api_router.include_router(mission_router, prefix="/mission", tags=["mission"])
+# api_router.include_router(mission_router, prefix="/mission", tags=["mission"])
