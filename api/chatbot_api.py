@@ -6,7 +6,6 @@ from services.chatbot_service import ChatbotService
 from services.mission_service import MissionService
 from services.member_mission_service import MemberMissionService
 from schemas.chatbot import StreamingChatRequestDto, ChatRequestDto, ChatResponseDto
-from schemas.mission import MissionSeqDto
 import logging
 import time
 from datetime import datetime
@@ -22,8 +21,6 @@ router = APIRouter()
 # TODO : 이후 dependencies/auth_dependencies.py 파일로 분리
 def get_chatbot_service(db: Session = Depends(get_session)) -> ChatbotService:
     return ChatbotService(db)
-
-
 def get_mission_service(db: Session = Depends(get_session)) -> MissionService:
     return MissionService(db)
 def get_member_mission_service(db: Session = Depends(get_session)) -> MemberMissionService:
@@ -65,6 +62,8 @@ async def complete_chat_session(background_tasks: BackgroundTasks,
     
     diary = await chatbot_service.save_chat_diary(member_seq, chat_history)
     logger.info(f"🚨🚨🚨{diary}") 
+    if diary is None:
+        raise HTTPException(status_code=404, detail="저장할 내용이 없음")
     member_mission = member_mission_service.create_member_mission(member_seq, diary.emotion_seq, diary.emotion_score)
 
     background_tasks.add_task(chatbot_service.delete_chat_history, member_seq)

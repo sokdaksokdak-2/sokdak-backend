@@ -1,11 +1,14 @@
 # 소셜 로그인 API
 from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from services.oauth_service import OAuthService
 from sqlalchemy.orm import Session
 from db.session import get_session
 from schemas.auth import LoginResponseDto
 from utils.oauth_url_builder import OAuthLoginURLBuilder
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -23,6 +26,7 @@ def get_oauth_service(db: Session = Depends(get_session)) -> OAuthService:
             description="{google, kakao, naver} OAuth 로그인 페이지로 리다이렉트",
         )
 def oauth_login(provider: str):
+    print("✅✅✅✅oauth api 접속")
     if provider not in SUPPORTED_PROVIDERS:
         raise HTTPException(status_code=400, detail="지원하지 않는 소셜 로그인입니다.")
 
@@ -54,16 +58,21 @@ def oauth_login(provider: str):
             )
 async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)):
     # 기존 응답 받아오기 (JSON 형태)
+    print("callback진입")
     login_data = await oauth_service.handle_oauth_callback(request, provider)
+
+    if isinstance(login_data, JSONResponse):
+        return login_data
  
     # 딥링크 URL 구성
     redirect_url = (
         f"myapp://oauth/callback"
-        f"?access_token={login_data['access_token']}"
-        f"&refresh_token={login_data['refresh_token']}"
-        f"&member_seq={login_data['member_seq']}"
-        f"&nickname={login_data['nickname']}"
+        f"?access_token={login_data.access_token}"
+        f"&refresh_token={login_data.refresh_token}"
+        f"&member_seq={login_data.member_seq}"
+        f"&nickname={login_data.nickname}"
     )
  
     return RedirectResponse(url=redirect_url)
+    # return login_data
 

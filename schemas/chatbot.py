@@ -21,11 +21,6 @@ class EmotionAnalysisResponseDto(BaseModel):
 class StreamingChatRequestDto(BaseModel):
     user_message: str
     member_seq: int   # 추가 필드!
-    
-class StreamingChatResponseDto(BaseModel):
-    message: str
-    emotion: EmotionDto
-    media_type: str
 
 class ChatHistoryDto(BaseModel):
     user_message: str
