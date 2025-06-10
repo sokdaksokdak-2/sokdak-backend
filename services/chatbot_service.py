@@ -255,51 +255,35 @@ class ChatbotService:
         return response_json.get("response")
 
     
-    async def send_emotion_to_arduino_if_changed(
-            self,
-            member_seq: int,
-            current_emotion_seq: int,
-        ):
-            # 최근 대화 내역에서 이전 감정 seq 가져오기
-            chat_history = await self.get_chat_history(member_seq, limit=2)
-            previous_emotion_seq = None
-            if chat_history:
-                last_response = chat_history[-2].chatbot_response
-                if last_response:
-                    previous_emotion_seq = last_response.get("emotion_seq")
-            else:
-                # 대화가 1개 밖에 없으면 그걸 이전 감정으로 간주
-                last_response = chat_history[-1].chatbot_response
-                if last_response:
-                    previous_emotion_seq = last_response.get("emotion_seq")
+    # async def send_emotion_to_arduino_if_changed(
+    #         self,
+    #         member_seq: int,
+    #         current_emotion_seq: int,
+    #     ):
+    #         # 최근 대화 내역에서 이전 감정 seq 가져오기
+    #         chat_history = await self.get_chat_history(member_seq, limit=2)
+    #         previous_emotion_seq = None
+    #         if chat_history:
+    #             last_response = chat_history[-2].chatbot_response
+    #             if last_response:
+    #                 previous_emotion_seq = last_response.get("emotion_seq")
+    #         else:
+    #             # 대화가 1개 밖에 없으면 그걸 이전 감정으로 간주
+    #             last_response = chat_history[-1].chatbot_response
+    #             if last_response:
+    #                 previous_emotion_seq = last_response.get("emotion_seq")
 
-              # 로그 출력
-            logger.info(f"[Arduino] 이전 감정 seq: {previous_emotion_seq}, 현재 감정 seq: {current_emotion_seq}")
+    #           # 로그 출력
+    #         logger.info(f"[Arduino] 이전 감정 seq: {previous_emotion_seq}, 현재 감정 seq: {current_emotion_seq}")
 
-            arduino_service = ArduinoService(self.db)
+    #         arduino_service = ArduinoService(self.db)
 
-            await arduino_service.send_color_if_emotion_changed(
-                member_seq=member_seq,
-                current_emotion_seq=current_emotion_seq,
-                previous_emotion_seq=previous_emotion_seq,
-            )
+    #         await arduino_service.send_color_if_emotion_changed(
+    #             member_seq=member_seq,
+    #             current_emotion_seq=current_emotion_seq,
+    #             previous_emotion_seq=previous_emotion_seq,
+    #         )
 
-    async def test_get_latest_chat_history(self, member_seq: int):
-        key = REDIS_CHAT_HISTORY_KEY.format(member_seq)
-        # 최근 1개를 가져옴
-        chat_history = await redis_client.lrange(key, 0, -2)  # -1부터 -1까지, 가장 마지막 아이템 1개
-        if not chat_history:
-            logger.info("채팅 내역 없음")
-            return None
-
-        # Redis에서 가져온 값은 바이트 문자열일 수 있으니 디코딩 필요하면 decode()
-        latest_history_json = chat_history[0]
-        if isinstance(latest_history_json, bytes):
-            latest_history_json = latest_history_json.decode('utf-8')
-
-        latest_chat = ChatHistoryDto(**json.loads(latest_history_json))
-        logger.info(f"최신 대화 내역: {latest_chat}")
-        return latest_chat
 
 
     async def arduino_chatbot_response(self, member_seq: int, emotion_seq: int):
