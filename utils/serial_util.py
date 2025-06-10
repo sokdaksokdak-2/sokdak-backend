@@ -2,7 +2,7 @@ import serial
 import time
 import logging
 import serial.tools.list_ports
- 
+
 logger = logging.getLogger(__name__)
  
 class ArduinoClient:
@@ -12,7 +12,7 @@ class ArduinoClient:
         self.timeout = timeout
         self.ser = None
         self._connect()
- 
+
     def _connect(self):
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
@@ -20,8 +20,11 @@ class ArduinoClient:
             logger.info(f"[Arduino] Connected on {self.port}")
         except Exception as e:
             logger.error(f"[Arduino] Connection failed: {e}")
+            logger.info(f"[Arduino] Connected on {self.port}")
+        except Exception as e:
+            logger.error(f"[Arduino] Connection failed: {e}")
             self.ser = None
- 
+
     def send_color(self, color_code: str):
         if self.ser and self.ser.is_open:
             try:

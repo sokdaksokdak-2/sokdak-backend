@@ -8,9 +8,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
-
 class ArduinoService:
     def __init__(self, db: Session):
         self.db = db
