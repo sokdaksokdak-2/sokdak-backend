@@ -10,7 +10,7 @@ from typing import List
 from datetime import date
 from services.emo_calendar_service import (
     get_monthly_summary, get_daily_emotions, update_calendar_entry,
-    create_calendar_entry, delete_calendar_entry, create_calendar_from_text
+    create_calendar_entry, delete_calendar_entry
 )
 
 router = APIRouter()
@@ -111,16 +111,3 @@ def delete_calendar_entry_api(
     return {"message": "게시글이 성공적으로 삭제되었습니다."}
 
 
-
-@router.post("/from-text", response_model=EmotionCalendarResponse)
-def create_calendar_from_text_api(
-    request: EmotionCalendarFromTextRequest,
-    db: Session = Depends(get_session)
-):
-    """
-    텍스트 기반 감정 분석 후 감정 기록 생성 API
-    - request: raw_text, calendar_date, member_seq
-    - 내부에서 GPT API를 활용해 감정 분석 및 기록 생성
-    - 반환: 생성된 EmotionCalendar 데이터
-    """
-    return create_calendar_from_text(db, request)

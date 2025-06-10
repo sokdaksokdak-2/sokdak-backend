@@ -14,7 +14,7 @@ class EmotionCalendarResponse(BaseModel):
     
 
 
-class EmotionCalendarUpdateRequest(BaseModel): # memo삭제
+class EmotionCalendarUpdateRequest(BaseModel): 
     character_image_url: Optional[str] = None
     context: Optional[str] = None
     title: Optional[str] = None

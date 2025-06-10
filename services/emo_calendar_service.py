@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from crud.emo_calendar import (
     get_strongest_emotions_by_month, get_emotions_by_date,
     update_emotion_calendar, create_emotion_calendar, delete_emotion_calendar,
-    get_monthly_emotion_stats, get_monthly_contexts, save_emotion_from_text
+    get_monthly_emotion_stats, get_monthly_contexts
 )
 from utils.emo_cal import calculate_emotion_distribution
 
@@ -36,17 +36,6 @@ def delete_calendar_entry(db: Session, calendar_seq: int):
     """
     return delete_emotion_calendar(db, calendar_seq)
 
-def create_calendar_from_text(db: Session, request):
-    """
-    텍스트 기반 감정 분석 후 캘린더에 저장
-    """
-    return save_emotion_from_text(
-        db=db,
-        member_seq=request.member_seq,
-        calendar_date=request.calendar_date,
-        text=request.text,
-        title=request.title
-    )
 
 def get_monthly_emotion_distribution(db: Session, member_seq: int, year: int, month: int):
     """
