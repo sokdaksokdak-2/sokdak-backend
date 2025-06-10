@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import EmotionCalendar, EmotionCalendarDetail, Emotion, SourceType
+from models import EmotionCalendar, EmotionCalendarDetail, Emotion, SourceType, EmotionDetail
 from schemas.emo_calendar import EmotionCalendarResponse, EmotionCalendarUpdateRequest, EmotionCalendarSummaryResponse, EmotionCalendarCreateRequest
 from sqlalchemy import func, extract
 from datetime import date, timedelta, datetime, UTC
@@ -33,12 +33,12 @@ def get_strongest_emotions_by_month(db: Session, member_seq: int, year: int, mon
     subquery = (
         db.query(
             EmotionCalendar.calendar_date.label("calendar_date"),
-            Emotion.character_image_url.label("character_image_url"),
-            Emotion.emotion_intensity.label("emotion_intensity"),
+            EmotionDetail.emotion_score.label("emotion_score"),
             Emotion.emotion_seq.label("emotion_seq")
         )
         .join(EmotionCalendarDetail, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq)
         .join(Emotion, EmotionCalendarDetail.emotion_seq == Emotion.emotion_seq)
+        .join(EmotionDetail, Emotion.emotion_seq == EmotionDetail.emotion_seq) 
         .filter(
             EmotionCalendar.member_seq == member_seq,
             extract("year", EmotionCalendar.calendar_date) == year,
@@ -47,22 +47,22 @@ def get_strongest_emotions_by_month(db: Session, member_seq: int, year: int, mon
         .subquery()
     )
 
-    # 1-3. 날짜별로 가장 높은 emotion_intensity, 그 중 가장 낮은 emotion_seq 선택
+    # 1-3. 날짜별로 가장 높은 emotion_score, 그 중 가장 낮은 emotion_seq 선택
     best_emotion_subquery = (
         db.query(
             subquery.c.calendar_date,
-            func.max(subquery.c.emotion_intensity).label("max_intensity")
+            func.max(subquery.c.emotion_score).label("max_score")
         )
         .group_by(subquery.c.calendar_date)
         .subquery()
     )
 
     final_query = (
-        db.query(subquery.c.calendar_date, subquery.c.character_image_url)
+        db.query(subquery.c.calendar_date, subquery.c.emotion_seq)
         .join(
             best_emotion_subquery,
             (subquery.c.calendar_date == best_emotion_subquery.c.calendar_date) &
-            (subquery.c.emotion_intensity == best_emotion_subquery.c.max_intensity)
+            (subquery.c.emotion_score == best_emotion_subquery.c.max_score)
         )
         .order_by(subquery.c.calendar_date, subquery.c.emotion_seq)  # 낮은 emotion_seq 우선
     )
@@ -70,12 +70,12 @@ def get_strongest_emotions_by_month(db: Session, member_seq: int, year: int, mon
     results = final_query.distinct(subquery.c.calendar_date).all()
 
     # 1-4. 날짜별 결과 정리
-    date_to_image = {r.calendar_date: r.character_image_url for r in results}
+    date_to_image = {r.calendar_date: r.emotion_seq for r in results}
 
     response = [
         EmotionCalendarSummaryResponse(
             calendar_date=d,
-            character_image_url=date_to_image.get(d, default_gray_image_url)
+            emotion_seq=date_to_image.get(d, default_gray_image_url)
         )
         for d in all_dates
     ]
@@ -90,7 +90,7 @@ def get_emotions_by_date(db: Session, member_seq: int, calendar_date: str):
     """
 
     result = (
-        db.query(Emotion.character_image_url,
+        db.query(Emotion.emotion_seq,
                  EmotionCalendarDetail.context,
                  EmotionCalendar.calendar_date)
         .join(EmotionCalendarDetail, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq)
@@ -101,7 +101,7 @@ def get_emotions_by_date(db: Session, member_seq: int, calendar_date: str):
     )
 
     return [EmotionCalendarResponse(
-        character_image_url=row[0],
+        emotion_seq=row[0],
         context=row[1],
         calendar_date=row[2]
     ) for row in result]
@@ -157,7 +157,7 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
         member_seq=request.member_seq,
         calendar_date=request.calendar_date,
         context=request.context,
-        character_image_url=None  # 캐릭터 이미지는 Emotion을 통해 가져오기 때문에 저장 안 함
+        emotion_seq=request.emotion_seq  # 캐릭터 이미지는 Emotion을 통해 가져오기 때문에 저장 안 함
     )
     db.add(new_calendar)
     db.flush()  # calendar_seq 확보
@@ -200,19 +200,20 @@ def delete_emotion_calendar(db: Session, calendar_seq: int) -> bool:
 
 def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, end_date: date):
     """
-    월별 감정별 (name_kr, intensity, count) raw 데이터 반환
+    월별 감정별 (name_kr, emotion_score, count) raw 데이터 반환
     """
     return db.query(
         Emotion.name_kr,
-        Emotion.emotion_intensity,
+        EmotionDetail.emotion_score,
         func.count().label("count")
     ).join(EmotionCalendarDetail, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq
     ).join(Emotion, EmotionCalendarDetail.emotion_seq == Emotion.emotion_seq
+    ).join(EmotionDetail, Emotion.emotion_seq == EmotionDetail.emotion_seq
     ).filter(
         EmotionCalendar.member_seq == member_seq,
         EmotionCalendar.calendar_date >= start_date,
         EmotionCalendar.calendar_date <= end_date
-    ).group_by(Emotion.name_kr, Emotion.emotion_intensity).all()
+    ).group_by(Emotion.name_kr, EmotionDetail.emotion_score).all()
 
 def get_monthly_contexts(db: Session, member_seq: int, start_date: date, end_date: date):
     """

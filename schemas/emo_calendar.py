@@ -4,22 +4,21 @@ from typing import Optional
 
 class EmotionCalendarSummaryResponse(BaseModel):
     calendar_date: date
-    character_image_url: str
+    emotion_seq: Optional[int]
 
 class EmotionCalendarResponse(BaseModel):
-    character_image_url: str
+    emotion_seq: Optional[int]
     context: Optional[str]
     calendar_date: date
-
     
+    class Config:
+        orm_mode = True
 
 
 class EmotionCalendarUpdateRequest(BaseModel): 
-    character_image_url: Optional[str] = None
     context: Optional[str] = None
     title: Optional[str] = None
     emotion_seq: Optional[int] = None  # 감정 변경을 위한 필드
-
 
 
 class EmotionCalendarCreateRequest(BaseModel): 

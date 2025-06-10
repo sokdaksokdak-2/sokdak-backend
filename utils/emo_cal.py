@@ -9,9 +9,9 @@ emotion_mapping = {
 
 def calculate_emotion_distribution(stats):
     """
-    감정별 (name_kr, intensity, count) 리스트를 받아
+    감정별 (name_kr, emotion_score, count) 리스트를 받아
     영어 감정명 기준 비율 딕셔너리로 변환합니다.
-    - stats: [(name_kr, intensity, count), ...]
+    - stats: [(name_kr, emotion_score, count), ...]
     - 반환: {감정영문명: 비율(float)}
     """
     if not isinstance(stats, list) or not stats:

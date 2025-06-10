@@ -143,7 +143,7 @@ class ChatbotService:
         JSON 형식으로 반환
         {
             "emotion_seq": 1,
-            "emotion_intensity": 2
+            "emotion_score": 2
         }
         '''
         return [
