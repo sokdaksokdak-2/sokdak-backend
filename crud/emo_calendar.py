@@ -229,38 +229,6 @@ def get_monthly_contexts(db: Session, member_seq: int, start_date: date, end_dat
     return [c[0] for c in contexts if c[0]]
 
 
-# 6. STT 텍스트 기반 감정 분석 및 저장
-def save_emotion_from_text(db: Session, member_seq: int, calendar_date: date, text: str, title: str = None):
-    """
-    텍스트 기반 감정 분석 후 캘린더에 저장
-    """
-    from services import analyze_emotion_from_text
-    emotion_data = analyze_emotion_from_text(text)
-    emotion = db.query(Emotion).filter(
-        Emotion.name_en == emotion_data["emotion_name_en"],
-        Emotion.emotion_intensity == emotion_data["emotion_intensity"]
-    ).first()
-    if not emotion:
-        raise ValueError("해당 감정 정보가 Emotion 테이블에 없습니다.")
-
-    new_calendar = EmotionCalendar(
-        member_seq=member_seq,
-        calendar_date=calendar_date
-    )
-    db.add(new_calendar)
-    db.flush()
-
-    new_detail = EmotionCalendarDetail(
-        calendar_seq=new_calendar.calendar_seq,
-        emotion_seq=emotion.emotion_seq,
-        title=title,
-        context=text,
-        source="ai"
-    )
-    db.add(new_detail)
-    db.commit()
-    return new_calendar
-
 def save_emotion_calendar(db: Session, member_seq: int, emotion_seq: int, emotion_score: int, title: str, context: str, source: str):
     ''' 챗봇 대화 내용 저장 요약
     '''
