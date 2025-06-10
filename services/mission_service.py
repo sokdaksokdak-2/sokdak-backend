@@ -9,7 +9,7 @@ class MissionService:
         self.mission_crud = mission_crud
     
 
-    async def get_missions(self) -> list:
+    async def get_all_missions(self) -> list:
         """
         모든 미션 조회
         """
@@ -25,3 +25,6 @@ class MissionService:
             content = request.content,
             emotion_detail_seq = request.emotion_detail_seq
         )
+    
+    async def get_mission(self, mission_seq: int):
+        return self.mission_crud.get_mission_by_mission_seq(self.db, mission_seq=mission_seq)

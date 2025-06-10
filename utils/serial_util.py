@@ -4,7 +4,7 @@ import logging
 import serial.tools.list_ports
 
 logger = logging.getLogger(__name__)
-
+ 
 class ArduinoClient:
     def __init__(self, port='COM4', baudrate=9600, timeout=1):
         self.port = port
@@ -17,6 +17,9 @@ class ArduinoClient:
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
             time.sleep(2)
+            logger.info(f"[Arduino] Connected on {self.port}")
+        except Exception as e:
+            logger.error(f"[Arduino] Connection failed: {e}")
             logger.info(f"[Arduino] Connected on {self.port}")
         except Exception as e:
             logger.error(f"[Arduino] Connection failed: {e}")

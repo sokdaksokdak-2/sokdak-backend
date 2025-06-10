@@ -12,7 +12,7 @@ class ChatResponseDto(BaseModel):
     chatbot_response: str
     emotion_seq: int
     emotion_score: int
-    color_code : str = "#000000"  # 또는 적절한 기본 색상
+    # color_code : str = "#000000"  # 또는 적절한 기본 색상
 
 class EmotionAnalysisResponseDto(BaseModel):
     emotion_seq: int

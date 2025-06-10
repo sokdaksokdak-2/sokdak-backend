@@ -16,3 +16,5 @@ from .emo_led import EmotionRequest
 from .emo_led import EmotionResponse
 
 from .emo_arduino import EmotionChangeRequest
+
+from .emotion import EmotionSeqScoreDto
