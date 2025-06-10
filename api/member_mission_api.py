@@ -11,7 +11,8 @@ router = APIRouter()
 def get_member_mission_service(db: Session = Depends(get_session)) -> MemberMissionService:
     return MemberMissionService(db)
 
-@router.get("/latest/{member_seq}")
+@router.get("/latest/{member_seq}",
+            summary="가장 최근에 생성된 미션 가져오기")
 def get_latest_mission(member_seq: int, member_mission_service: MemberMissionService = Depends(get_member_mission_service)):
     result = member_mission_service.get_latest_member_mission_by_member_seq(member_seq)
     if not result:
