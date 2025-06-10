@@ -13,7 +13,9 @@ def get_mission_service(db: Session = Depends(get_session)) -> MissionService:
 
 # TODO : 미완성, 미션내용, 감정번호?, 감정강도?, 미션 배정일, 미션 완료일, 미션완료
 # GET /mission/{mission_seq}
-@router.get("/{mission_seq}")
+@router.get("/{mission_seq}",
+            summary="미션번호를 이용해 미션 가져오기"
+            )
 async def get_mission_by_seq(mission_seq: int, mission_service: MissionService = Depends(get_mission_service)):
     mission = await mission_service.get_mission(mission_seq)
     if not mission:

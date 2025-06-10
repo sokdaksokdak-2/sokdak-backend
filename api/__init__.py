@@ -5,7 +5,6 @@
 from fastapi import APIRouter
 
 # 각 라우터 import
-from .emotion_api import router as emotion_router
 from .emo_calendar import router as emo_calendar_router
 from .emo_report import router as emo_report_router
 from .member_api import router as member_router
@@ -21,7 +20,6 @@ api_router = APIRouter()
 
 # 각 라우터들을 버전별로 추가
 
-api_router.include_router(emotion_router, prefix="/emotion", tags=["emotion"])
 api_router.include_router(emo_calendar_router, prefix="/emo_calendar", tags=["calendar"])
 api_router.include_router(emo_report_router, prefix="/emo_report", tags=["report"])
 api_router.include_router(member_router, prefix="/member", tags=["member"])

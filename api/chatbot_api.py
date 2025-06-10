@@ -70,32 +70,17 @@ async def complete_chat_session(background_tasks: BackgroundTasks,
     
     return member_mission
 
-@router.post("/stream",
-             summary="챗봇 대화 - 이전 대화 기억 못함",
-            response_model=None)
-async def stream_chat(request: StreamingChatRequestDto, chatbot_service: ChatbotService = Depends(get_chatbot_service)):
-    start_time = time.time()
-    logger.info(f"챗봇 API 호출 시작: {round(start_time ,3)}초")
+# @router.post("/stream",
+#              summary="챗봇 대화 - 이전 대화 기억 못함",
+#             response_model=None)
+# async def stream_chat(request: StreamingChatRequestDto, chatbot_service: ChatbotService = Depends(get_chatbot_service)):
+#     start_time = time.time()
+#     logger.info(f"챗봇 API 호출 시작: {round(start_time ,3)}초")
 
-    response = await chatbot_service.get_chatbot_response_no_user(request.user_message)
+#     response = await chatbot_service.get_chatbot_response_no_user(request.user_message)
 
-    logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
-    return response
-
-
-@router.post("/stream_test",
-             summary="챗봇 아두이노 테스트",
-              response_model=None)
-async def stream_chat_test(request: StreamingChatRequestDto, db: Session = Depends(get_session), redis_client: Redis = Depends(get_redis)):
-
-    start_time = time.time()
-    logger.info(f"챗봇 API 호출 시작: {round(start_time ,3)}초")
-    chatbot_service = ChatbotService(db=db, redis_client=redis_client)
-
-    generator = await chatbot_service.get_chatbot_response(request.member_seq, request.user_message)
+#     logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
+#     return response
 
 
-    logger.info(f"챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
-
-    return  generator # StreamingResponse(generator, media_type="text/event-stream")
 
