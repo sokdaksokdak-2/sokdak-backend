@@ -15,10 +15,10 @@ def generate_emotion_prompt(raw_text: str) -> str:
     - 감정 강도는 1 (약함), 2 (보통), 3 (강함) 중 하나로 판단하세요.
 
     다음 JSON 형식으로 출력하세요:
-    {{"emotion_name_en": "감정영문명", "emotion_intensity": 숫자}}
+    {{"emotion_name_en": "감정영문명", "emotion_score": 숫자}}
 
     예시:
-    {{"emotion_name_en": "joy", "emotion_intensity": 2}}
+    {{"emotion_name_en": "joy", "emotion_score": 2}}
 
     텍스트:
     \"\"\"{raw_text}\"\"\"
@@ -45,7 +45,7 @@ def analyze_emotion_from_text(raw_text: str) -> dict:
         print("감정 분석 중 오류 발생:", e)
         return {
             "emotion_name_en": "unknown",
-            "emotion_intensity": 0
+            "emotion_score": 0
         }
 
 # GPT를 활용한 월간 감정 요약

@@ -33,28 +33,30 @@ def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, en
     - end_date: 조회 종료일
 
     Returns:
-    - [(name_kr, emotion_intensity, count), ...] 형태의 리스트 반환
+    - [(name_kr, emotion_score, count), ...] 형태의 리스트 반환
     """
 
     from sqlalchemy import func  # 집계 함수를 사용하기 위해 func를 import
 
     try:
         EmotionAlias = aliased(Emotion)
+        EmotionDetailAlias = aliased(EmotionCalendarDetail)
 
         result = (
             db.query(
                 EmotionAlias.name_kr,
-                EmotionAlias.emotion_intensity,
+                EmotionDetailAlias.emotion_score,
                 func.count().label("count")
             )
             .join(EmotionCalendarDetail, EmotionCalendarDetail.emotion_seq == EmotionAlias.emotion_seq)
             .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
+            .join(EmotionDetailAlias, Emotion.emotion_seq == EmotionDetailAlias.emotion_seq) 
             .filter(
                 EmotionCalendar.member_seq == member_seq,
                 EmotionCalendar.calendar_date >= start_date,
                 EmotionCalendar.calendar_date <= end_date
             )
-            .group_by(EmotionAlias.name_kr, EmotionAlias.emotion_intensity)
+            .group_by(EmotionAlias.name_kr, EmotionDetailAlias.emotion_score)
             .all()
         )
         return result or []  # ← 쿼리 결과가 없으면 빈 리스트 반환
