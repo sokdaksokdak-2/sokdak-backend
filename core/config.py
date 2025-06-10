@@ -20,10 +20,6 @@ class Settings(BaseSettings):
     jwt_secret_key:str
     jwt_algorithm:str = "HS256"
 
-    vito_client_id:str
-    vito_client_secret:str
-    vito_auth_url:str
-
     redis_host: str
     redis_port : int
     redis_db : int
