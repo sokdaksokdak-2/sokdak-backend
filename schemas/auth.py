@@ -13,4 +13,5 @@ class LoginResponseDto(BaseModel):
     refresh_token: str
     member_seq: int
     nickname: str
+    email: str
 
