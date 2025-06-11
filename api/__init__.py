@@ -22,10 +22,12 @@ api_router = APIRouter()
 
 api_router.include_router(emo_calendar_router, prefix="/emo_calendar", tags=["calendar"])
 api_router.include_router(emo_report_router, prefix="/emo_report", tags=["report"])
-api_router.include_router(member_router, prefix="/member", tags=["member"])
+api_router.include_router(member_router, prefix="/members", tags=["member"])
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(oauth_router, prefix="/oauth", tags=["OAuth"])
 api_router.include_router(chatbot_router, prefix="/chatbot", tags=["chatbot"])
 api_router.include_router(emo_arduino_router, prefix="/arduino", tags=["Arduino"])
-api_router.include_router(mission_router, prefix="/mission", tags=["mission"])
-api_router.include_router(member_mission_router, prefix="/member-mission", tags=["member-mission"])
+api_router.include_router(mission_router, prefix="/missions", tags=["mission"])
+api_router.include_router(member_mission_router, tags=["mission"])
+
+
