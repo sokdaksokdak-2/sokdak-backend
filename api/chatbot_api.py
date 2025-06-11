@@ -1,10 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
-from fastapi.responses import StreamingResponse
 from db.session import get_session
-from services.chatbot_service import ChatbotService
-from services.mission_service import MissionService
-from services.member_mission_service import MemberMissionService
+from services import ChatbotService, MissionService, MemberMissionService
 from schemas.chatbot import StreamingChatRequestDto, ChatRequestDto, ChatResponseDto
 import logging
 import time
@@ -33,20 +30,16 @@ def get_member_mission_service(db: Session = Depends(get_session)) -> MemberMiss
 @router.post("/chat",
              summary="챗봇 대화 - 이전 대화 반영 ",
              )
-async def chat_message(background_tasks: BackgroundTasks, request: ChatRequestDto, chatbot_service: ChatbotService = Depends(get_chatbot_service)):
+async def chat_message( request: ChatRequestDto, chatbot_service: ChatbotService = Depends(get_chatbot_service)):
     start_time = time.time()
-    logger.info(f"✅챗봇 API 호출 시작: {round(start_time ,3)}초")
+    logger.info(f"🤖챗봇 API 호출 시작: {round(start_time ,3)}초")
                                              
     if not request.member_seq or not request.user_message:
         raise HTTPException(status_code=400, detail="member_seq 또는 user_message가 없습니다.")
     
     response = await chatbot_service.get_chatbot_response(request.member_seq, request.user_message)
-    logger.info(f"✅✅챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
 
-
-    background_tasks.add_task(chatbot_service.arduino_chatbot_response, request.member_seq, response.emotion_seq)
-
-    logger.info(f"✅✅챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
+    logger.info(f"🤖🤖챗봇 API 호출 종료: {round(time.time() - start_time, 3)}초")
     return response
 
 @router.post("/complete/{member_seq}",
@@ -61,7 +54,6 @@ async def complete_chat_session(background_tasks: BackgroundTasks,
     chat_history = await chatbot_service.get_chat_history(member_seq)
     
     diary = await chatbot_service.save_chat_diary(member_seq, chat_history)
-    logger.info(f"🚨🚨🚨{diary}") 
     if diary is None:
         raise HTTPException(status_code=404, detail="저장할 내용이 없음")
     member_mission = member_mission_service.create_member_mission(member_seq, diary.emotion_seq, diary.emotion_score)

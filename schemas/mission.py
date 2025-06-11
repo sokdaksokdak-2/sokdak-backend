@@ -9,5 +9,5 @@ class MissionDto(BaseModel):
     content: str
     emotion_detail_seq: int
 
-class MissionSeqDto(BaseModel) :
+class MemberMissionSeqDto(BaseModel) :
     mission_seq: int

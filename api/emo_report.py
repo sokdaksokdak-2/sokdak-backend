@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from db.session import get_session
 from schemas import EmotionReportResponse
-from services.emo_report_service import create_emotion_report
-from crud.emo_report import get_emotion_report
+from crud import get_emotion_report
 from datetime import date
 
 router = APIRouter()

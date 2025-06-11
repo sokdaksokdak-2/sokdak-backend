@@ -1,111 +1,33 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
-from models.mission import Mission
-from models.member_mission import MemberMission
-from models.emotion_detail import EmotionDetail
-import random
-
+from sqlalchemy import cast, Date
+from models import Mission, MemberMission, EmotionDetail
+from datetime import date, datetime, UTC
 import logging
 
-logger = logging. getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def get_member_missions_by_member_seq(db: Session, member_seq: int) -> list[MemberMission]:
-    """
-    주어진 member_seq에 대한 미션 목록을 조회합니다.
-    """
-    return (
-        db.query(MemberMission)
-        .filter(MemberMission.member_seq == member_seq)
-        .order_by(MemberMission.date_assigned)
-        .all()
-    )
-
-def get_member_mission_by_member_mission_seq(
-    db: Session, member_mission_seq: int
-) -> MemberMission | None :
-    """
-    주어진 member_mission_seq에 대한 미션을 조회합니다.
-    """
-    return (
-        db.query(MemberMission)
-        .filter(MemberMission.member_mission_seq == member_mission_seq)
-        .first()
-    )
-
-
-def get_latest_member_mission_by_member_seq(db: Session, member_seq: int) -> MemberMission | None :
-    """
-    주어진 member_seq에 대한 가장 최근 미션 조회
-    """
+    """특정 회원의 모든 미션을 날짜순으로 조회"""
     return (
         db.query(MemberMission)
         .filter(MemberMission.member_seq == member_seq)
         .order_by(MemberMission.date_assigned.desc())
-        .first()
-    )
-
-
-def create_member_mission(
-    db: Session, member_seq: int, emotion_seq: int, emotion_score: int
-) :
-    """
-    주어진 member_seq와 감정+강도(emotion_seq, emotion_score)에 맞는 미션을 생성
-    """
-    # 1. emotion_detail 조회
-    emotion_detail =(
-        db.query(EmotionDetail)
-        .filter(EmotionDetail.emotion_seq == emotion_seq, 
-                EmotionDetail.emotion_score == emotion_score)
-        .first()
-    )
-    
-    
-    if not emotion_detail:
-        raise ValueError("해당 감정과 강도에 맞는 감정 상세 정보가 없습니다.")
-    
-    # 2. 사용자가 최근에 수행한 미션 조회
-    recent_assigned_missions_subq = (
-        db.query(MemberMission)
-        .filter(MemberMission.member_seq == member_seq)
-        .order_by(MemberMission.date_assigned.desc())
-        .limit(7) # 최근 7개 미션 조회
-        .subquery()
-    )
-    
-    # 3. 최근 수행한 미션과 중복되지 않은 미션 필터링
-    available_missions = (
-        db.query(Mission)
-        .filter(Mission.emotion_detail_seq == emotion_detail.emotion_detail_seq)
-        .filter(~Mission.mission_seq.in_(select(recent_assigned_missions_subq.c.mission_seq)))
         .all()
     )
 
-    if not available_missions : # 전부 최근에 수행한 미션이라면
-        available_missions = (
-            db.query(Mission)
-            .filter(Mission.emotion_detail_seq == emotion_detail.emotion_detail_seq)
-            .all()
-        )
-
-    if not available_missions:
-        logger.error("해당 감정 상세에 매핑된 미션이 없습니다.")
-        raise ValueError("사용 가능한 미션이 없습니다.")
-    # 4. 랜덤으로 하나 선택
-    selected_mission = random.choice(available_missions)
-
-
-    # 5. MemberMission 생성
-    member_mission = MemberMission(
-        member_seq=member_seq,
-        mission_seq=selected_mission.mission_seq,
+def get_mission_by_member_mission_seq(db: Session, mission_seq: int) -> tuple[MemberMission, Mission, EmotionDetail] | None:
+    """맴버미션 ID로 단일 미션 조회"""
+    return (
+        db.query(MemberMission, Mission, EmotionDetail)
+        .join(Mission, MemberMission.mission_seq == Mission.mission_seq)
+        .join(EmotionDetail, Mission.emotion_detail_seq == EmotionDetail.emotion_detail_seq)
+        .filter(MemberMission.mission_seq == mission_seq)
+        .first()
     )
-    db.add(member_mission)
-    db.commit()
-    db.refresh(member_mission)
-    return member_mission
 
-def get_latest_member_mission_with_details(db: Session, member_seq: int):
-    result = (
+def get_latest_member_mission_by_member_seq(db: Session, member_seq: int) -> tuple[MemberMission, Mission, EmotionDetail] | None:
+    """특정 회원의 가장 최신 미션 조회"""
+    return (
         db.query(MemberMission, Mission, EmotionDetail)
         .join(Mission, MemberMission.mission_seq == Mission.mission_seq)
         .join(EmotionDetail, Mission.emotion_detail_seq == EmotionDetail.emotion_detail_seq)
@@ -113,4 +35,76 @@ def get_latest_member_mission_with_details(db: Session, member_seq: int):
         .order_by(MemberMission.date_assigned.desc())
         .first()
     )
-    return result  # (MemberMission, Mission, EmotionDetail) 튜플 반환
+
+def get_emotion_detail(db: Session, emotion_seq: int, emotion_score: int) -> EmotionDetail | None:
+    """감정 시퀀스와 점수로 감정 상세 조회"""
+    return (
+        db.query(EmotionDetail)
+        .filter(
+            EmotionDetail.emotion_seq == emotion_seq,
+            EmotionDetail.emotion_score == emotion_score
+        )
+        .first()
+    )
+
+def get_recent_mission_ids(db: Session, member_seq: int, limit: int = 7) -> list[int]:
+    """최근 수행한 미션 ID 목록 조회"""
+    recent_missions_subq = (
+        db.query(MemberMission.mission_seq)
+        .filter(MemberMission.member_seq == member_seq)
+        .order_by(MemberMission.date_assigned.desc())
+        .limit(limit)
+        .subquery()
+    )
+    return [row[0] for row in db.query(recent_missions_subq).all()]
+
+def get_available_missions(db: Session, emotion_detail_seq: int, excluded_mission_ids: list[int]) -> list[Mission]:
+    """감정 상세에 해당하며 제외된 미션을 뺀 미션 목록 조회"""
+    query = db.query(Mission).filter(Mission.emotion_detail_seq == emotion_detail_seq)
+    if excluded_mission_ids:
+        query = query.filter(~Mission.mission_seq.in_(excluded_mission_ids))
+    return query.all()
+
+def create_member_mission_record(db: Session, member_seq: int, mission_seq: int) -> MemberMission:
+    """새로운 회원 미션 레코드 생성"""
+    new_member_mission = MemberMission(
+        member_seq=member_seq,
+        mission_seq=mission_seq,
+    )
+    db.add(new_member_mission)
+    db.commit()
+    db.refresh(new_member_mission)
+    return new_member_mission
+
+def get_member_mission_by_member_seq_and_date(db: Session, member_seq: int, target_date: date) -> MemberMission | None:
+    """사용자와 날짜로 미션 해당 날짜 조회"""
+    return db.query(MemberMission).filter(
+        MemberMission.member_seq == member_seq,
+        cast(MemberMission.date_assigned, Date) == target_date
+    ).all()
+
+def update_mission_status_to_completed(db: Session, member_mission_seq: int) -> MemberMission | None:
+    """미션 완료상태로 변경"""
+    mission = db.query(MemberMission).filter(
+        MemberMission.member_mission_seq == member_mission_seq
+    ).first()
+
+    if mission:
+        mission.completed = True
+        mission.date_completed = datetime.now(UTC)
+        db.commit()
+        db.refresh(mission)
+    
+    return mission
+
+def delete_member_mission(db: Session, member_mission_seq: int) -> bool:
+    """미션 삭제"""
+    mission = db.query(MemberMission).filter(
+        MemberMission.member_mission_seq == member_mission_seq
+    ).first()
+
+    if mission:
+        db.delete(mission)
+        db.commit()
+        return True
+    return False
