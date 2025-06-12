@@ -18,11 +18,11 @@ def get_daily_emotions(db: Session, member_seq: int, calendar_date):
     """
     return get_emotions_by_date(db, member_seq, calendar_date)
 
-def update_calendar_entry(db: Session, calendar_seq: int, update_data):
+def update_calendar_entry(db: Session, detail_seq: int, member_seq: int, update_data):
     """
     감정 캘린더(및 디테일) 수정
     """
-    return update_emotion_calendar(db, calendar_seq, update_data)
+    return update_emotion_calendar(db, detail_seq, member_seq, update_data)
 
 def create_calendar_entry(db: Session, request):
     """
@@ -30,11 +30,11 @@ def create_calendar_entry(db: Session, request):
     """
     return create_emotion_calendar(db, request)
 
-def delete_calendar_entry(db: Session, calendar_seq: int):
+def delete_calendar_entry(db: Session, detail_seq: int, member_seq: int):
     """
     감정 캘린더 및 디테일 삭제
     """
-    return delete_emotion_calendar(db, calendar_seq)
+    return delete_emotion_calendar(db, detail_seq, member_seq)
 
 
 def get_monthly_emotion_distribution(db: Session, member_seq: int, year: int, month: int):

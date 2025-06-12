@@ -50,22 +50,18 @@ def read_emo_calendar(
 
 
 # 3. 캘린더 내용 수정 (감정 캐릭터, 제목, 메모 등 변경)
-@router.put("/{calendar_seq}")
-def update_emo_calendar(
-    calendar_seq: int,
+@router.put("/{detail_seq}")
+def update_calendar_entry_api(
+    detail_seq: int,
     update_data: EmotionCalendarUpdateRequest,
+    member_seq: int,  # 로그인 사용자 ID (Depends로 주입받을 수 있음)
     db: Session = Depends(get_session)
 ):
-    """
-    감정 기록 수정 API
-    - calendar_seq: 수정할 감정 캘린더 항목의 시퀀스
-    - update_data: 제목, 메모, 감정 캐릭터 등의 수정 내용
-    - 반환: 성공 메시지 또는 404 에러
-    """
-    updated = update_calendar_entry(db, calendar_seq, update_data)
-    if updated is None:
-        raise HTTPException(status_code=404, detail="EmotionCalendar not found")
-    return {"message": "Update successful", "calendar_seq": calendar_seq}
+    updated = update_calendar_entry(db, detail_seq, member_seq, update_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="수정 권한이 없거나 존재하지 않는 감정 기록입니다.")
+    return {"message": "감정 기록이 성공적으로 수정되었습니다."}
+
 
 
 
@@ -97,15 +93,16 @@ def create_calendar_entry_api(
 # 5. 캘린더 내용 삭제  (calendar_seq 기준)
 @router.delete("/{calendar_seq}")
 def delete_calendar_entry_api(
-    calendar_seq: int,
+    detail_seq: int,
+    member_seq: int,
     db: Session = Depends(get_session)
 ):
     """
     감정 기록 삭제 API
-    - calendar_seq: 삭제할 감정 캘린더 항목의 시퀀스
+    - detail_seq: 삭제할 감정 캘린더 항목의 시퀀스
     - 반환: 성공 메시지 또는 404 에러
     """
-    success = delete_calendar_entry(db, calendar_seq)
+    success = delete_calendar_entry(db, detail_seq, member_seq)
     if not success:
         raise HTTPException(status_code=404, detail="해당 게시글을 찾을 수 없습니다.")
     return {"message": "게시글이 성공적으로 삭제되었습니다."}
