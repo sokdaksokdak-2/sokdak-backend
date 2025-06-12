@@ -58,7 +58,7 @@ def oauth_login(provider: str):
             )
 async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)):
     # 기존 응답 받아오기 (JSON 형태)
-    print("✅callback진입")
+    logger.info("✅callback진입")
     login_data = await oauth_service.handle_oauth_callback(request, provider)
 
     if isinstance(login_data, JSONResponse):
