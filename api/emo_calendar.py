@@ -97,15 +97,15 @@ def create_calendar_entry_api(
 # 5. 캘린더 내용 삭제  (calendar_seq 기준)
 @router.delete("/{calendar_seq}")
 def delete_calendar_entry_api(
-    calendar_seq: int,
+    detail_seq: int,
     db: Session = Depends(get_session)
 ):
     """
     감정 기록 삭제 API
-    - calendar_seq: 삭제할 감정 캘린더 항목의 시퀀스
+    - detail_seq: 삭제할 감정 캘린더 항목의 시퀀스
     - 반환: 성공 메시지 또는 404 에러
     """
-    success = delete_calendar_entry(db, calendar_seq)
+    success = delete_calendar_entry(db, detail_seq, member_seq)
     if not success:
         raise HTTPException(status_code=404, detail="해당 게시글을 찾을 수 없습니다.")
     return {"message": "게시글이 성공적으로 삭제되었습니다."}

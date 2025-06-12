@@ -180,18 +180,18 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
     return new_calendar
 
 # 5. 캘린더 내용 삭제 (calendar_seq 기준)
-def delete_emotion_calendar(db: Session, calendar_seq: int) -> bool:
+def delete_emotion_calendar(db: Session, detail_seq: int) -> bool:
     """
     감정 캘린더 및 디테일 삭제
     """
     # 관련된 EmotionCalendarDetail 먼저 삭제
     db.query(EmotionCalendarDetail).filter(
-        EmotionCalendarDetail.calendar_seq == calendar_seq
+        EmotionCalendarDetail.detail_seq == detail_seq
     ).delete()
 
     # EmotionCalendar 삭제
-    deleted = db.query(EmotionCalendar).filter(
-        EmotionCalendar.calendar_seq == calendar_seq
+    deleted = db.query(EmotionCalendarDetail).filter(
+        EmotionCalendarDetail.detail_seq == detail_seq
     ).delete()
 
     db.commit()
