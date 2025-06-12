@@ -36,7 +36,7 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api")
 
-# ✅ 루트 테스트용 경로만 유지
-@app.get("/")
-def root():
-    return {"message": "sokdak api"}
+# # ✅ 루트 테스트용 경로만 유지
+# @app.get("/")
+# def root():
+#     return {"message": "sokdak api"}
