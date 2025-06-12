@@ -7,10 +7,12 @@ class EmotionCalendarSummaryResponse(BaseModel):
     emotion_seq: Optional[int]
 
 class EmotionCalendarResponse(BaseModel):
-    emotion_seq: Optional[int]
-    context: Optional[str]
+    detail_seq: int
+    emotion_seq: int
+    title: str
+    context: str
     calendar_date: date
-    
+
     class Config:
         orm_mode = True
 

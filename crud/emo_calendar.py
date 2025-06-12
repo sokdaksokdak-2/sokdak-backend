@@ -84,27 +84,44 @@ def get_strongest_emotions_by_month(db: Session, member_seq: int, year: int, mon
 
 
 # 2. 캘린더 상세페이지(해당 날짜 전체 게시물등 불러오기)
-def get_emotions_by_date(db: Session, member_seq: int, calendar_date: str):
+def get_emotions_by_date(
+    db: Session,
+    member_seq: int,
+    calendar_date: date,       # ← 타입을 date 로
+):
     """
     특정 날짜의 감정 기록 전체 반환
     """
 
-    result = (
-        db.query(Emotion.emotion_seq,
-                 EmotionCalendarDetail.context,
-                 EmotionCalendar.calendar_date)
-        .join(EmotionCalendarDetail, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq)
-        .join(Emotion, EmotionCalendarDetail.emotion_seq == Emotion.emotion_seq)
-        .filter(EmotionCalendar.member_seq == member_seq,
-                EmotionCalendar.calendar_date == calendar_date)
+    rows = (
+        db.query(
+            EmotionCalendarDetail.detail_seq,
+            EmotionCalendarDetail.emotion_seq,
+            EmotionCalendarDetail.title,
+            EmotionCalendarDetail.context,
+            EmotionCalendar.calendar_date,
+        )
+        .join(                       # ① 부모(EmotionCalendar)와 조인
+            EmotionCalendar,
+            EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq,
+        )
+        .filter(
+            EmotionCalendar.member_seq == member_seq,
+            EmotionCalendar.calendar_date == calendar_date,
+        )
         .all()
     )
 
-    return [EmotionCalendarResponse(
-        emotion_seq=row[0],
-        context=row[1],
-        calendar_date=row[2]
-    ) for row in result]
+    return [
+        EmotionCalendarResponse(
+            detail_seq=row[0],
+            emotion_seq=row[1],
+            title=row[2],
+            context=row[3],
+            calendar_date=row[4],
+        )
+        for row in rows
+    ]
 
 
 # 3. 캘린더 내용 수정 (감정 캐릭터, 제목, context 등 변경)
