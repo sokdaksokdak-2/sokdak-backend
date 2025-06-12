@@ -66,7 +66,7 @@ async def oauth_callback(provider: str, request: Request, oauth_service: OAuthSe
  
     # 딥링크 URL 구성
     redirect_url = (
-        f"myapp://oauth/callback"
+        f"myapp://api/oauth/callback"
         f"?access_token={login_data.access_token}"
         f"&refresh_token={login_data.refresh_token}"
         f"&member_seq={login_data.member_seq}"
