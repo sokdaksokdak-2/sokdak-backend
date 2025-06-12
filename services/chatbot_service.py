@@ -45,7 +45,7 @@ class ChatbotService:
             chat_history = await redis_client.lrange(key, -limit, -1)
 
         chat_history_list = [ChatHistoryDto(**json.loads(history)) for history in chat_history]
-
+        logger.debug(f"챗 히스토리 : {chat_history}")
         # for item in chat_history_list:
         #     logger.info(f"{item}")
         return chat_history_list
