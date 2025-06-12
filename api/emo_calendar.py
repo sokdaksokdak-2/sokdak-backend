@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from sqlalchemy.orm import Session
 from db.session import get_session
 from schemas import (
@@ -54,12 +54,15 @@ def read_emo_calendar(
 def update_calendar_entry_api(
     detail_seq: int,
     update_data: EmotionCalendarUpdateRequest,
-    member_seq: int,  # 로그인 사용자 ID (Depends로 주입받을 수 있음)
-    db: Session = Depends(get_session)
+    member_seq: int = Query(...),           # 또는 Depends(get_current_user)
+    db: Session = Depends(get_session),
 ):
-    updated = update_calendar_entry(db, detail_seq, member_seq, update_data)
-    if not updated:
-        raise HTTPException(status_code=404, detail="수정 권한이 없거나 존재하지 않는 감정 기록입니다.")
+    ok = update_calendar_entry(db, detail_seq, member_seq, update_data)
+    if not ok:
+        raise HTTPException(
+            status_code=404,
+            detail="수정 권한이 없거나 존재하지 않는 감정 기록입니다.",
+        )
     return {"message": "감정 기록이 성공적으로 수정되었습니다."}
 
 
@@ -91,7 +94,7 @@ def create_calendar_entry_api(
 
 
 # 5. 캘린더 내용 삭제  (calendar_seq 기준)
-@router.delete("/{calendar_seq}")
+@router.delete("/{detail_seq}")
 def delete_calendar_entry_api(
     detail_seq: int,
     member_seq: int,

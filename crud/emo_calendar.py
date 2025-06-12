@@ -84,72 +84,85 @@ def get_strongest_emotions_by_month(db: Session, member_seq: int, year: int, mon
 
 
 # 2. 캘린더 상세페이지(해당 날짜 전체 게시물등 불러오기)
-def get_emotions_by_date(db: Session, member_seq: int, calendar_date: str):
+def get_emotions_by_date(
+    db: Session,
+    member_seq: int,
+    calendar_date: date,       # ← 타입을 date 로
+):
     """
     특정 날짜의 감정 기록 전체 반환
     """
 
-    result = (
-        db.query(Emotion.emotion_seq,
-                 EmotionCalendarDetail.context,
-                 EmotionCalendar.calendar_date)
-        .join(EmotionCalendarDetail, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq)
-        .join(Emotion, EmotionCalendarDetail.emotion_seq == Emotion.emotion_seq)
-        .filter(EmotionCalendar.member_seq == member_seq,
-                EmotionCalendar.calendar_date == calendar_date)
+    rows = (
+        db.query(
+            EmotionCalendarDetail.detail_seq,
+            EmotionCalendarDetail.emotion_seq,
+            EmotionCalendarDetail.title,
+            EmotionCalendarDetail.context,
+            EmotionCalendar.calendar_date,
+        )
+        .join(                       # ① 부모(EmotionCalendar)와 조인
+            EmotionCalendar,
+            EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq,
+        )
+        .filter(
+            EmotionCalendar.member_seq == member_seq,
+            EmotionCalendar.calendar_date == calendar_date,
+        )
         .all()
     )
 
-    return [EmotionCalendarResponse(
-        emotion_seq=row[0],
-        context=row[1],
-        calendar_date=row[2]
-    ) for row in result]
+    return [
+        EmotionCalendarResponse(
+            detail_seq=row[0],
+            emotion_seq=row[1],
+            title=row[2],
+            context=row[3],
+            calendar_date=row[4],
+        )
+        for row in rows
+    ]
 
 
 # 3. 캘린더 내용 수정 (감정 캐릭터, 제목, context 등 변경)
 def update_emotion_calendar(
     db: Session,
     detail_seq: int,
-    member_seq: int,  # ✅ 추가: 로그인 사용자 ID
-    update_data: EmotionCalendarUpdateRequest
+    member_seq: int,
+    update_data: EmotionCalendarUpdateRequest,
 ):
     """
-    감정 캘린더 디테일 수정 (사용자 소유권 검증 포함)
+    감정 캘린더 디테일 수정 (소유권 검증 포함)
+    반환: True = 수정 성공 / False = 권한 없음·미존재
     """
-
-    # 1. detail_seq가 주어진 member_seq의 감정 캘린더에 속하는지 확인
+    # 1️⃣ detail_seq 가 member_seq 소유인지 확인
     detail = (
         db.query(EmotionCalendarDetail)
-        .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
+        .join(
+            EmotionCalendar,
+            EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq,
+        )
         .filter(
             EmotionCalendarDetail.detail_seq == detail_seq,
-            EmotionCalendar.member_seq == member_seq
+            EmotionCalendar.member_seq == member_seq,
         )
         .first()
     )
+    if detail is None:
+        return False     # 404 사유: 없음 또는 내 소유 아님
 
-    if not detail:
-        return None  # 존재하지 않거나, 본인의 기록이 아님
-
-    # 2. 감정 디테일 수정
+    # 2️⃣ 부분 업데이트
     if update_data.emotion_seq is not None:
         detail.emotion_seq = update_data.emotion_seq
+    if update_data.title is not None:
+        detail.title = update_data.title
+    if update_data.context is not None:
+        detail.context = update_data.context
 
-    # 3. 제목/메모 수정은 calendar 테이블에서
-    calendar = db.query(EmotionCalendar).filter(
-        EmotionCalendar.calendar_seq == detail.calendar_seq
-    ).first()
-
-    if calendar:
-        if update_data.title is not None:
-            calendar.title = update_data.title  # (※ title 컬럼은 추후 확장 시 사용)
-        if update_data.context is not None:
-            calendar.context = update_data.context  # (※ context 컬럼이 실제로 존재할 경우)
-
+    # 3️⃣ 커밋 & 완료
     db.commit()
-    db.refresh(detail)  # 또는 db.refresh(calendar)
-    return detail
+    return True
+
 
 
 

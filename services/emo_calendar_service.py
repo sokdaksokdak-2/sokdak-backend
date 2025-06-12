@@ -5,6 +5,7 @@ from crud.emo_calendar import (
     get_monthly_emotion_stats, get_monthly_contexts
 )
 from utils.emo_cal import calculate_emotion_distribution
+from schemas.emo_calendar import EmotionCalendarCreateRequest, EmotionCalendarUpdateRequest
 
 def get_monthly_summary(db: Session, member_seq: int, year: int, month: int):
     """
@@ -18,11 +19,30 @@ def get_daily_emotions(db: Session, member_seq: int, calendar_date):
     """
     return get_emotions_by_date(db, member_seq, calendar_date)
 
-def update_calendar_entry(db: Session, detail_seq: int, member_seq: int, update_data):
+# 1. 서비스 래퍼
+def update_calendar_entry(
+    db: Session,
+    detail_seq: int,
+    member_seq: int,
+    update_data: EmotionCalendarUpdateRequest,
+):
     """
-    감정 캘린더(및 디테일) 수정
+    감정 캘린더(및 디테일) 수정 - 래퍼
     """
     return update_emotion_calendar(db, detail_seq, member_seq, update_data)
+
+
+# 2. 실제 DB 수정 함수
+def update_emotion_calendar(
+    db: Session,
+    detail_seq: int,
+    member_seq: int,
+    update_data: EmotionCalendarUpdateRequest,
+):
+    """
+    detail_seq가 로그인 사용자(member_seq)의 기록인지 확인 후
+    emotion_seq / title / context 중 넘어온 값만 부분 수정
+    """
 
 def create_calendar_entry(db: Session, request):
     """
