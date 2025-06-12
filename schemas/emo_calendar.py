@@ -21,8 +21,7 @@ class EmotionCalendarUpdateRequest(BaseModel):
     emotion_seq: Optional[int] = None  # 감정 변경을 위한 필드
 
 
-class EmotionCalendarCreateRequest(BaseModel): 
-    member_seq: int
+class EmotionCalendarCreateRequest(BaseModel): # 추가
     calendar_date: date
     title: str
     context: str

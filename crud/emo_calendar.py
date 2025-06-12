@@ -108,42 +108,49 @@ def get_emotions_by_date(db: Session, member_seq: int, calendar_date: str):
 
 
 # 3. 캘린더 내용 수정 (감정 캐릭터, 제목, context 등 변경)
-def update_emotion_calendar(db: Session, calendar_seq: int, update_data: EmotionCalendarUpdateRequest):
+def update_emotion_calendar(
+    db: Session,
+    detail_seq: int,
+    member_seq: int,  # ✅ 추가: 로그인 사용자 ID
+    update_data: EmotionCalendarUpdateRequest
+):
     """
-    감정 캘린더(및 디테일) 수정
+    감정 캘린더 디테일 수정 (사용자 소유권 검증 포함)
     """
 
-    # 3-1. 기본 감정 캘린더 조회
-    calendar = db.query(EmotionCalendar).filter(EmotionCalendar.calendar_seq == calendar_seq).first()
-    if not calendar:
-        return None
+    # 1. detail_seq가 주어진 member_seq의 감정 캘린더에 속하는지 확인
+    detail = (
+        db.query(EmotionCalendarDetail)
+        .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
+        .filter(
+            EmotionCalendarDetail.detail_seq == detail_seq,
+            EmotionCalendar.member_seq == member_seq
+        )
+        .first()
+    )
 
-    # 3-2. 제목과 메모는 EmotionCalendar에서 직접 수정
-    if update_data.title is not None:
-        calendar.title = update_data.title   # 제목은 추 후에 DB에 추가하게 되면 주석 푸는거로
-    if update_data.context is not None:
-        calendar.context = update_data.context
+    if not detail:
+        return None  # 존재하지 않거나, 본인의 기록이 아님
 
-    # 3-3. 감정 캐릭터 이미지 → Emotion 연결 관계 수정
+    # 2. 감정 디테일 수정
     if update_data.emotion_seq is not None:
-        detail = db.query(EmotionCalendarDetail).filter(
-            EmotionCalendarDetail.calendar_seq == calendar_seq
-        ).first()
+        detail.emotion_seq = update_data.emotion_seq
 
-        if detail:
-            detail.emotion_seq = update_data.emotion_seq
-            # detail.emotion_score = ...  # 제거
-        else:
-            new_detail = EmotionCalendarDetail(
-                calendar_seq=calendar_seq,
-                emotion_seq=update_data.emotion_seq
-                # emotion_score=...  # 제거
-            )
-            db.add(new_detail)
+    # 3. 제목/메모 수정은 calendar 테이블에서
+    calendar = db.query(EmotionCalendar).filter(
+        EmotionCalendar.calendar_seq == detail.calendar_seq
+    ).first()
+
+    if calendar:
+        if update_data.title is not None:
+            calendar.title = update_data.title  # (※ title 컬럼은 추후 확장 시 사용)
+        if update_data.context is not None:
+            calendar.context = update_data.context  # (※ context 컬럼이 실제로 존재할 경우)
 
     db.commit()
-    db.refresh(calendar)
-    return calendar
+    db.refresh(detail)  # 또는 db.refresh(calendar)
+    return detail
+
 
 
 # 4. 캘린더에 새로운 내용 입력 (사용자가 감정, 메모, 제목 직접 입력)
@@ -180,22 +187,29 @@ def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
     return new_calendar
 
 # 5. 캘린더 내용 삭제 (calendar_seq 기준)
-def delete_emotion_calendar(db: Session, detail_seq: int) -> bool:
+def delete_emotion_calendar(db: Session, detail_seq: int, member_seq: int) -> bool:
     """
-    감정 캘린더 및 디테일 삭제
+    해당 사용자의 감정 캘린더 상세(detail) 삭제
     """
-    # 관련된 EmotionCalendarDetail 먼저 삭제
-    db.query(EmotionCalendarDetail).filter(
-        EmotionCalendarDetail.detail_seq == detail_seq
-    ).delete()
+    # 1. detail_seq에 해당하는 상세 정보를 가져오면서, 그 부모 캘린더의 member_seq도 검증
+    detail = (
+        db.query(EmotionCalendarDetail)
+        .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
+        .filter(
+            EmotionCalendarDetail.detail_seq == detail_seq,
+            EmotionCalendar.member_seq == member_seq  # 사용자 소유 여부 확인
+        )
+        .first()
+    )
 
-    # EmotionCalendar 삭제
-    deleted = db.query(EmotionCalendarDetail).filter(
-        EmotionCalendarDetail.detail_seq == detail_seq
-    ).delete()
+    if not detail:
+        return False  # detail_seq가 없거나, 다른 사람의 캘린더
 
+    # 2. 삭제 수행
+    db.delete(detail)
     db.commit()
-    return deleted > 0
+    return True
+
 
 
 def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, end_date: date):
