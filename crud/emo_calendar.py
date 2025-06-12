@@ -128,45 +128,41 @@ def get_emotions_by_date(
 def update_emotion_calendar(
     db: Session,
     detail_seq: int,
-    member_seq: int,  # ✅ 추가: 로그인 사용자 ID
-    update_data: EmotionCalendarUpdateRequest
+    member_seq: int,
+    update_data: EmotionCalendarUpdateRequest,
 ):
     """
-    감정 캘린더 디테일 수정 (사용자 소유권 검증 포함)
+    감정 캘린더 디테일 수정 (소유권 검증 포함)
+    반환: True = 수정 성공 / False = 권한 없음·미존재
     """
-
-    # 1. detail_seq가 주어진 member_seq의 감정 캘린더에 속하는지 확인
+    # 1️⃣ detail_seq 가 member_seq 소유인지 확인
     detail = (
         db.query(EmotionCalendarDetail)
-        .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
+        .join(
+            EmotionCalendar,
+            EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq,
+        )
         .filter(
             EmotionCalendarDetail.detail_seq == detail_seq,
-            EmotionCalendar.member_seq == member_seq
+            EmotionCalendar.member_seq == member_seq,
         )
         .first()
     )
+    if detail is None:
+        return False     # 404 사유: 없음 또는 내 소유 아님
 
-    if not detail:
-        return None  # 존재하지 않거나, 본인의 기록이 아님
-
-    # 2. 감정 디테일 수정
+    # 2️⃣ 부분 업데이트
     if update_data.emotion_seq is not None:
         detail.emotion_seq = update_data.emotion_seq
+    if update_data.title is not None:
+        detail.title = update_data.title
+    if update_data.context is not None:
+        detail.context = update_data.context
 
-    # 3. 제목/메모 수정은 calendar 테이블에서
-    calendar = db.query(EmotionCalendar).filter(
-        EmotionCalendar.calendar_seq == detail.calendar_seq
-    ).first()
-
-    if calendar:
-        if update_data.title is not None:
-            calendar.title = update_data.title  # (※ title 컬럼은 추후 확장 시 사용)
-        if update_data.context is not None:
-            calendar.context = update_data.context  # (※ context 컬럼이 실제로 존재할 경우)
-
+    # 3️⃣ 커밋 & 완료
     db.commit()
-    db.refresh(detail)  # 또는 db.refresh(calendar)
-    return detail
+    return True
+
 
 
 

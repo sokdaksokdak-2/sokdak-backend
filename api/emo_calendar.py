@@ -94,7 +94,7 @@ def create_calendar_entry_api(
 
 
 # 5. 캘린더 내용 삭제  (calendar_seq 기준)
-@router.delete("/{calendar_seq}")
+@router.delete("/{detail_seq}")
 def delete_calendar_entry_api(
     detail_seq: int,
     member_seq: int,
