@@ -13,3 +13,4 @@ passlib[bcrypt]
 PyJWT
 redis[async]
 pyserial
+pymysql

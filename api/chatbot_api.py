@@ -56,7 +56,7 @@ async def complete_chat_session(background_tasks: BackgroundTasks,
     diary = await chatbot_service.save_chat_diary(member_seq, chat_history)
     if diary is None:
         raise HTTPException(status_code=404, detail="저장할 내용이 없음")
-    member_mission = member_mission_service.create_member_mission(member_seq, diary.emotion_seq, diary.emotion_score)
+    member_mission = member_mission_service.create_member_mission(member_seq, diary.emotion_seq, diary.emotion_score, diary.title)
 
     background_tasks.add_task(chatbot_service.delete_chat_history, member_seq)
     

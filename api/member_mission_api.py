@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from fastapi.responses import Response
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
-from services import MemberService, MemberMissionService
+from services import MemberMissionService
 from sqlalchemy.orm import Session
 from db.session import get_session
 from datetime import date
@@ -28,7 +28,8 @@ def get_latest_mission_by_member(
     return latest_mission
 
 @router.get("/members/{member_seq}/missions", 
-            summary="사용자의 전체 미션 목록 조회 (최신순)")
+            summary="사용자의 전체 미션 목록 조회 (최신순)",
+            )
 def get_all_missions_by_member(
     member_seq: int,
     member_mission_service: MemberMissionService = Depends(get_member_mission_service)

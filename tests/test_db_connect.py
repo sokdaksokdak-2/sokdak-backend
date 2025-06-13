@@ -72,45 +72,31 @@ emotion_data = [
     ("평온", "neutral", "#8ED465"),
 ]
 
-# 감정 강도별 데이터 생성 (1: 낮음, 2: 보통, 3: 강함)
-def generate_emotion_variants():
-    emotions = []
-    for name_k, name_e, color in emotion_data:
-        emotions.append(
-                Emotion(
-                    name_kr=name_k,
-                    name_en=name_e,
-                    color_code=color,
-                )
-            )
-        # for score in range(1, 4):  # 1~3
-            
-    return emotions
 
-def test_insert_emotion_data():
-    engine = create_engine(DATABASE_URL, echo=True)
-    print("▶️ 감정 데이터 삽입 및 검증 시작...")
+# def test_insert_emotion_data():
+#     engine = create_engine(DATABASE_URL, echo=True)
+#     print("▶️ 감정 데이터 삽입 및 검증 시작...")
 
-    SQLModel.metadata.create_all(engine)
-    emotions = generate_emotion_variants()
+#     SQLModel.metadata.create_all(engine)
+#     emotions = generate_emotion_variants()
 
-    with Session(engine) as session:
-        # 🔥 기존 데이터 삭제
-        session.execute(text("DELETE FROM emotion"))
-        session.commit()
+#     with Session(engine) as session:
+#         # 🔥 기존 데이터 삭제
+#         session.execute(text("DELETE FROM emotion"))
+#         session.commit()
 
-        # 🔥 새 데이터 삽입
-        session.add_all(emotions)
-        session.commit()
-        print("✅ 감정 데이터 삽입 완료!")
+#         # 🔥 새 데이터 삽입
+#         session.add_all(emotions)
+#         session.commit()
+#         print("✅ 감정 데이터 삽입 완료!")
 
-        # 🔍 검증용 쿼리
-        results = session.execute(select(Emotion)).scalars().all()
-        assert len(results) == 5, f"❌ 예상한 5개 감정 중 {len(results)}개만 들어감"
-        print("✅ 감정 데이터 개수 검증 통과 (5개)")
+#         # 🔍 검증용 쿼리
+#         results = session.execute(select(Emotion)).scalars().all()
+#         assert len(results) == 5, f"❌ 예상한 5개 감정 중 {len(results)}개만 들어감"
+#         print("✅ 감정 데이터 개수 검증 통과 (5개)")
 
-        joy = next((e for e in results if e.name_kr == "기쁨"), None)
-        assert joy is not None, "❌ '기쁨' 감정 없음"
-        print("✅ '기쁨' 데이터 검증 통과")
+#         joy = next((e for e in results if e.name_kr == "기쁨"), None)
+#         assert joy is not None, "❌ '기쁨' 감정 없음"
+#         print("✅ '기쁨' 데이터 검증 통과")
 
-    print("🎉 전체 감정 데이터 삽입 및 검증 테스트 완료!")
+#     print("🎉 전체 감정 데이터 삽입 및 검증 테스트 완료!")

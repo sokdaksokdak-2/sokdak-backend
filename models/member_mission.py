@@ -12,6 +12,7 @@ class MemberMission(SQLModel, table=True):
     date_assigned: datetime = Field(default_factory=lambda: datetime.now(UTC)) # 배정일, 시간 포함
     completed: Optional[bool] = Field(default=False)
     date_completed: Optional[datetime] = Field(default=None) # 완료된 경우만 값 있음
+    diary_title: str = Field(max_length=200, description="GPT가 생성한 미션의 기준이 된 일기 제목")
     # custom_mission_text: Optional[str] = Field(default=None, description="gpt로 생성된 미션")
 
     # 다대다 관계 테이블 이므로 member_seq, mission_seq 반드시 필요
