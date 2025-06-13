@@ -80,21 +80,19 @@ def create_calendar_entry_api(
     - request: 감정, 제목, 메모, 날짜 등의 데이터
     - 반환: 생성된 calendar_seq 및 성공 메시지
     """
-    result = create_calendar_entry(db, request)
+    calendar, detail = create_calendar_entry(db, request)
     return {
-        "calendar_seq": result.calendar_seq,
-        "calendar_date": result.calendar_date,
-        "member_seq": result.member_seq,
-        "title": request.title,
-        "context": request.context,
-        "emotion_seq": request.emotion_seq
-
-
+        "detail_seq": detail.detail_seq,               # ✅ 올바르게 접근
+        "calendar_date": calendar.calendar_date,
+        "member_seq": calendar.member_seq,
+        "title": detail.title,
+        "context": detail.context,
+        "emotion_seq": detail.emotion_seq
     }
 
 
-# 5. 캘린더 내용 삭제  (calendar_seq 기준)
-@router.delete("/{detail_seq}")
+# 5. 캘린더 내용 삭제  (detail_seq 기준)
+@router.delete("/delete/{detail_seq}")
 def delete_calendar_entry_api(
     detail_seq: int,
     member_seq: int,
