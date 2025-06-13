@@ -184,7 +184,8 @@ class ChatbotService:
         챗봇 응답 생성
         '''
         prompt = [{"role": "system", "content": CHAT_PROMPT}]
-    
+        logger.warning(f"챗봇 프롬프트 생성 - {chat_history}")
+
         for record in chat_history:
             prompt.append({"role": "user", "content": f"{record.user_message} (감정: {EMOTION_NAME_MAP[record.chatbot_response.get('emotion_seq')]}, 강도: {STRENGTH_MAP[record.chatbot_response.get('emotion_score')]})"})
             prompt.append({"role": "assistant", "content": json.dumps(record.chatbot_response, ensure_ascii=False)})
@@ -201,7 +202,7 @@ class ChatbotService:
         # 2. 챗봇 응답 생성 json
         chatbot_prompt = self.build_chatbot_prompt(user_message, chat_history)
         chatbot_response = await self.call_openai(prompt=chatbot_prompt, model="gpt-4o-mini")
-        logger.info(chatbot_response)
+        logger.warning(f"챗봇 응답: {chatbot_response}")
 
         try: 
             chatbot_response_json = json.loads(chatbot_response)
