@@ -1,23 +1,17 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from typing import AsyncGenerator
-import asyncio
-from services.emo_arduino_service import ArduinoService
-from utils.gpt_token_manager import get_openai_client
-from utils.redis_client import redis_client
+from services import ArduinoService
+from utils import get_openai_client, redis_client
 import json
-from schemas.chatbot import ChatHistoryDto, ChatResponseDto
+from schemas import ChatHistoryDto, ChatResponseDto, EmotionSeqScoreAndCalendarDetailTitleDto
 from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_SUMMARY_PROMPT
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP, EMOTION_COLOR_MAP
 from crud import emo_calendar as emo_calendar_crud
 from crud import emotion as emotion_crud
-from schemas import EmotionSeqScoreDto
-from services.mission_service import MissionService
 import logging
 from typing import AsyncGenerator
-import asyncio
-from services.emo_arduino_service import ArduinoService
+
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
 HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
 
@@ -28,7 +22,6 @@ class ChatbotService:
     def __init__(self, db: Session):
         self.db = db
         self.client = get_openai_client()
-        self.mission_service = MissionService
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
         '''
@@ -101,9 +94,10 @@ class ChatbotService:
                 context,
                 "ai"
             )
-            return EmotionSeqScoreDto(
+            return EmotionSeqScoreAndCalendarDetailTitleDto(
                 emotion_seq=most_common_emotion_seq,
-                emotion_score=avg_emotion_score
+                emotion_score=avg_emotion_score,
+                title=title
             )
         except Exception as e:
             logger.error(f"대화 요약 저장 실패 : {e}")

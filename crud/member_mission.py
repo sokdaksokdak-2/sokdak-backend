@@ -6,14 +6,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def get_member_missions_by_member_seq(db: Session, member_seq: int) -> list[MemberMission]:
-    """특정 회원의 모든 미션을 날짜순으로 조회"""
+def get_member_missions_by_member_seq(db: Session, member_seq: int) -> list[tuple[MemberMission, Mission]]:
+    """특정 회원의 모든 미션을 날짜순으로 조회 (미션 내용 포함)"""
     return (
-        db.query(MemberMission)
+        db.query(MemberMission, Mission)
+        .join(Mission, MemberMission.mission_seq == Mission.mission_seq)
         .filter(MemberMission.member_seq == member_seq)
         .order_by(MemberMission.date_assigned.desc())
         .all()
     )
+
 
 def get_mission_by_member_mission_seq(db: Session, mission_seq: int) -> tuple[MemberMission, Mission, EmotionDetail] | None:
     """맴버미션 ID로 단일 미션 조회"""
@@ -65,15 +67,14 @@ def get_available_missions(db: Session, emotion_detail_seq: int, excluded_missio
         query = query.filter(~Mission.mission_seq.in_(excluded_mission_ids))
     return query.all()
 
-def create_member_mission_record(db: Session, member_seq: int, mission_seq: int) -> MemberMission:
+def create_member_mission_record(db: Session, member_seq: int, mission_seq: int, diary_title: str) -> MemberMission:
     """새로운 회원 미션 레코드 생성"""
     new_member_mission = MemberMission(
         member_seq=member_seq,
         mission_seq=mission_seq,
+        diary_title=diary_title
     )
     db.add(new_member_mission)
-    db.commit()
-    db.refresh(new_member_mission)
     return new_member_mission
 
 def get_member_mission_by_member_seq_and_date(db: Session, member_seq: int, target_date: date) -> MemberMission | None:

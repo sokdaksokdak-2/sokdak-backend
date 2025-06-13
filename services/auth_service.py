@@ -3,7 +3,7 @@
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from schemas.auth import LoginRequestDto, LoginResponseDto
+from schemas import LoginRequestDto, LoginResponseDto
 from passlib.context import CryptContext
 from crud import member as member_crud
 from core.token import TokenService

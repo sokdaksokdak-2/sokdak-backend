@@ -32,6 +32,8 @@ def oauth_login(provider: str):
 
     url_builder = OAuthLoginURLBuilder()
 
+    logger.info(f"🚨🚨🚨🚨url_builder.build_google_url()")
+
     if provider == "google":
         return RedirectResponse(url_builder.build_google_url())
     elif provider == "kakao":

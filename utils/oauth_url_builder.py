@@ -19,6 +19,9 @@ class OAuthLoginURLBuilder:
             "access_type": "offline",
             "prompt": "consent"  # refresh_token 발급을 위해 필요
         }
+
+        logger.info(f"✨✨✨https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}")
+
         return f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
 
     @staticmethod
