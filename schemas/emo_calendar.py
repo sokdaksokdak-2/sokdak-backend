@@ -49,3 +49,7 @@ class CalendarCreateResponse(BaseModel):
     context: str
     emotion_seq: int
 
+class EmotionSeqScoreAndCalendarDetailTitleDto(BaseModel):
+    emotion_seq: int
+    emotion_score: int
+    title: str

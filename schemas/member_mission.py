@@ -8,9 +8,10 @@ class MemberMissionResponseDto(BaseModel) :
     emotion_score: int
     title: str
     
-class EmotionSeqScoreAndCalendarDetailTitleDto(BaseModel) :
+class MissionSuggestionDto(BaseModel) :
     emotion_seq: int
     emotion_score: int
+    mission_seq: int
     title: str
 
 class MemberMissionSimpleDto(BaseModel) :
@@ -18,3 +19,5 @@ class MemberMissionSimpleDto(BaseModel) :
     content : str
     title : str
     completed : int
+    emotion_seq: int
+    emotion_score: int

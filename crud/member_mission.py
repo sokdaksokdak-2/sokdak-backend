@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 def get_member_missions_by_member_seq(db: Session, member_seq: int) -> list[tuple[MemberMission, Mission]]:
     """특정 회원의 모든 미션을 날짜순으로 조회 (미션 내용 포함)"""
     return (
-        db.query(MemberMission, Mission)
+        db.query(MemberMission, Mission, EmotionDetail)
         .join(Mission, MemberMission.mission_seq == Mission.mission_seq)
+        .join(EmotionDetail, Mission.emotion_detail_seq == EmotionDetail.emotion_detail_seq)
         .filter(MemberMission.member_seq == member_seq)
         .order_by(MemberMission.date_assigned.desc())
         .all()

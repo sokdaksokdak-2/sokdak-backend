@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from crud import member_mission as member_mission_crud
-from schemas import MemberMissionResponseDto, EmotionSeqScoreAndCalendarDetailTitleDto, MemberMissionSimpleDto
+from schemas import MemberMissionResponseDto, MissionSuggestionDto, MemberMissionSimpleDto
 from datetime import date
 import logging
 import random
@@ -11,9 +11,20 @@ logger = logging.getLogger(__name__)
 class MemberMissionService:
     def __init__(self, db: Session):
         self.db = db
+    
+    def create_member_mission(self, member_seq: int, request: MissionSuggestionDto):
+        "미션 수락 시 맴버미션 테이블에 저장"
+        # 6. 미션 레코드 생성 (내부에서 commit까지 하지 않게 해두는 게 좋음)
+        member_mission = member_mission_crud.create_member_mission_record(
+            self.db, member_seq, request.mission_seq, request.title
+        )
 
-    def create_member_mission(self, member_seq: int, emotion_seq: int, emotion_score: int, diary_title: str):
+        self.db.commit()  # 수동 커밋
+        self.db.refresh(member_mission)  # 커밋 후 refresh
+
+    def propose_mission(self, member_seq: int, emotion_seq: int, emotion_score: int, diary_title: str):
         """
+        감정 분석을 바탕으로 미션을 제안 (DB에 저장되진 않음)
         미션 생성 - 랜덤 미션 선택 로직 포함
         """
         try:
@@ -43,18 +54,11 @@ class MemberMissionService:
             # 5. 랜덤 미션 선택
             selected_mission = random.choice(available_missions)
 
-            # 6. 미션 레코드 생성 (내부에서 commit까지 하지 않게 해두는 게 좋음)
-            member_mission = member_mission_crud.create_member_mission_record(
-                self.db, member_seq, selected_mission.mission_seq, diary_title
-            )
-
-            self.db.commit()  # 수동 커밋
-            self.db.refresh(member_mission)  # 커밋 후 refresh
-
-            return EmotionSeqScoreAndCalendarDetailTitleDto(
+            return MissionSuggestionDto(
                 emotion_seq=emotion_seq,
                 emotion_score=emotion_score,
-                title=member_mission.diary_title
+                mission_seq=selected_mission.mission_seq,
+                title=diary_title
             )
         except SQLAlchemyError as e:
             self.db.rollback()
@@ -109,8 +113,10 @@ class MemberMissionService:
                     content=m.content,  # ← Mission 테이블의 내용
                     title=mm.diary_title,
                     completed=mm.completed,
+                    emotion_seq=ed.emotion_seq,
+                    emotion_score=ed.emotion_score,
                 )
-                for mm, m in results
+                for mm, m, ed in results
             ]
         except SQLAlchemyError as e:
             logger.error(f"전체 미션 조회 중 데이터베이스 오류 발생: {str(e)}")
