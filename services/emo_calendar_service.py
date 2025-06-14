@@ -6,6 +6,8 @@ from crud.emo_calendar import (
 )
 from utils.emo_cal import calculate_emotion_distribution
 from schemas.emo_calendar import EmotionCalendarCreateRequest, EmotionCalendarUpdateRequest
+from typing import Tuple
+from models.emotion_calendar import EmotionCalendar
 
 def get_monthly_summary(db: Session, member_seq: int, year: int, month: int):
     """
@@ -47,6 +49,8 @@ def update_emotion_calendar(
 def create_calendar_entry(db: Session, request):
     """
     감정 캘린더 및 디테일 새로 생성
+    - create_emotion_calendar를 래핑하여 호출
+    - 반환: (EmotionCalendar, EmotionCalendarDetail)
     """
     return create_emotion_calendar(db, request)
 

@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, Query
 from openai import OpenAI
 import os
+from typing import Tuple
 
 from utils import OPENAI_API_KEY
 
@@ -167,39 +168,66 @@ def update_emotion_calendar(
 
 
 # 4. 캘린더에 새로운 내용 입력 (사용자가 감정, 메모, 제목 직접 입력)
-def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest):
+def create_emotion_calendar(db: Session, request: EmotionCalendarCreateRequest) -> Tuple[EmotionCalendar, EmotionCalendarDetail]:
     """
     감정 캘린더 및 디테일 새로 생성
+    - 중복 체크 및 데이터 검증 포함
+    - 반환: (EmotionCalendar, EmotionCalendarDetail) 튜플
     """
+    try:
+        # 1. 해당 날짜에 이미 EmotionCalendar가 있는지 확인
+        calendar = (
+            db.query(EmotionCalendar)
+            .filter(
+                EmotionCalendar.member_seq == request.member_seq,
+                EmotionCalendar.calendar_date == request.calendar_date
+            )
+            .first()
+        )
 
-    # 1. EmotionCalendar 테이블에 새 레코드 추가
-    new_calendar = EmotionCalendar(
-        member_seq=request.member_seq,
-        calendar_date=request.calendar_date,
-        context=request.context,
-        emotion_seq=request.emotion_seq  # 캐릭터 이미지는 Emotion을 통해 가져오기 때문에 저장 안 함
-    )
-    db.add(new_calendar)
-    db.flush()  # calendar_seq 확보
+        # 2. 없으면 새로 생성 (created_at 제거: 해당 컬럼이 DB에 없음)
+        if not calendar:
+            calendar = EmotionCalendar(
+                member_seq=request.member_seq,
+                calendar_date=request.calendar_date,
+            )
+            db.add(calendar)
+            db.flush()  # calendar_seq 확보
 
-    # 2. EmotionCalendarDetail 테이블에 감정 정보 추가
-    new_detail = EmotionCalendarDetail(
-        calendar_seq=new_calendar.calendar_seq,
-        emotion_seq=request.emotion_seq,
-        title=request.title,
-        source=SourceType.USER,         # ✅ 직접 작성이므로 고정
-        emotion_score=1,
-        context=request.context
+        # 3. EmotionCalendarDetail 생성 (created_at 사용 가능)
+        detail = EmotionCalendarDetail(
+            calendar_seq=calendar.calendar_seq,
+            emotion_seq=request.emotion_seq,
+            title=request.title,
+            context=request.context,
+            source=SourceType.USER,
+            emotion_score=1.0,
+            created_at=datetime.now(UTC)
+        )
+        db.add(detail)
 
-    )
-    db.add(new_detail)
-    
-    # 3. 커밋 및 결과 반환
-    db.commit()
-    db.refresh(new_calendar)
-    return new_calendar
+        # 4. 저장 및 반환
+        db.commit()
+        db.refresh(calendar)
+        db.refresh(detail)
 
-# 5. 캘린더 내용 삭제 (calendar_seq 기준)
+        return calendar, detail
+
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="데이터 저장 중 오류가 발생했습니다. 입력값을 확인해주세요."
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"서버 오류가 발생했습니다: {str(e)}"
+        )
+
+
+# 5. 캘린더 내용 삭제 (detail_seq 기준)
 def delete_emotion_calendar(db: Session, detail_seq: int, member_seq: int) -> bool:
     """
     해당 사용자의 감정 캘린더 상세(detail) 삭제
