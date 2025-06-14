@@ -27,6 +27,7 @@ class EmotionCalendarUpdateRequest(BaseModel):
 
 
 class EmotionCalendarCreateRequest(BaseModel): # 추가
+
     member_seq: int
     calendar_date: date
     title: str
@@ -42,7 +43,7 @@ class EmotionCalendarFromTextRequest(BaseModel):
 
 ### 추가
 class CalendarCreateResponse(BaseModel):
-    calendar_seq: int
+    detail_seq: int
     calendar_date: date
     member_seq: int
     title: str
