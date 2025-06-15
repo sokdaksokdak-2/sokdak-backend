@@ -24,7 +24,7 @@ def save_emotion_report(db: Session, report: EmotionReport):
 
 def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, end_date: date):
     """
-    전달 월의 감정별 (한글명, 강도, count) raw 데이터를 반환합니다.
+    전달 월의 감정별 (emotion_seq, 강도, count) raw 데이터를 반환합니다.
     
     Parameters:
     - db: SQLAlchemy 세션 객체
@@ -33,7 +33,7 @@ def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, en
     - end_date: 조회 종료일
 
     Returns:
-    - [(name_kr, emotion_score, count), ...] 형태의 리스트 반환
+    - [(emotion_seq, emotion_score, count), ...] 형태의 리스트 반환
     """
 
     from sqlalchemy import func  # 집계 함수를 사용하기 위해 func를 import
@@ -44,7 +44,7 @@ def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, en
 
         result = (
             db.query(
-                EmotionAlias.name_kr,
+                EmotionAlias.emotion_seq,
                 EmotionDetailAlias.emotion_score,
                 func.count().label("count")
             )
@@ -56,7 +56,7 @@ def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, en
                 EmotionCalendar.calendar_date >= start_date,
                 EmotionCalendar.calendar_date <= end_date
             )
-            .group_by(EmotionAlias.name_kr, EmotionDetailAlias.emotion_score)
+            .group_by(EmotionAlias.emotion_seq, EmotionDetailAlias.emotion_score)
             .all()
         )
         return result or []  # ← 쿼리 결과가 없으면 빈 리스트 반환
