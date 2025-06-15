@@ -62,11 +62,9 @@ class MemberMissionService:
                 content=selected_mission.content,
             )
         except SQLAlchemyError as e:
-            self.db.rollback()
             logger.error(f"미션 생성 중 데이터베이스 오류 발생: {str(e)}")
             raise Exception("미션 생성에 실패했습니다.")
         except Exception as e:
-            self.db.rollback()
             logger.error(f"미션 생성 중 예외 발생: {str(e)}")
             raise Exception("미션 생성 중 오류가 발생했습니다.")
 
