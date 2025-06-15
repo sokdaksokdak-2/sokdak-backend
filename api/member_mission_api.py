@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException, Query
 from fastapi.responses import Response
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 from services import MemberMissionService
-from schemas import MissionSuggestionDto
+from schemas import MissionSuggestionDto, MissionAcceptRequestDto
 from sqlalchemy.orm import Session
 from db.session import get_session
 from datetime import date
@@ -21,10 +21,10 @@ def get_member_mission_service(db: Session = Depends(get_session)) -> MemberMiss
              status_code=201)
 def accept_mission(
     member_seq: int,
-    request: MissionSuggestionDto,
+    request: MissionAcceptRequestDto,
     member_mission_service: MemberMissionService = Depends(get_member_mission_service)
 ):
-    member_mission = member_mission_service.accept_mission(member_seq, request)
+    member_mission = member_mission_service.create_member_mission(member_seq, request)
     return {
         "message": "미션 저장 완료", 
         "member_mission_seq": member_mission.member_mission_seq

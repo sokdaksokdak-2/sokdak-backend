@@ -13,6 +13,11 @@ class MissionSuggestionDto(BaseModel) :
     emotion_score: int
     mission_seq: int
     title: str
+    content: str
+
+class MissionAcceptRequestDto(BaseModel):
+    mission_seq: int
+    title: str
 
 class MemberMissionSimpleDto(BaseModel) :
     member_mission_seq : int
