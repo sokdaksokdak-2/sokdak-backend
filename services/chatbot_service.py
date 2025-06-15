@@ -1,25 +1,19 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from typing import AsyncGenerator
-import asyncio
-from services.emo_arduino_service import ArduinoService
-from utils.gpt_token_manager import get_openai_client
-from utils.redis_client import redis_client
+from services import ArduinoService
+from utils import get_openai_client, redis_client
 import json
-from schemas.chatbot import ChatHistoryDto, ChatResponseDto
+from schemas import ChatHistoryDto, ChatResponseDto, EmotionSeqScoreAndCalendarDetailTitleDto
 from prompts.prompts import CHAT_PROMPT, EMOTION_ANALYSIS_PROMPT, CHAT_HISTORY_SUMMARY_PROMPT
 from datetime import datetime
 from core.emotion_config import EMOTION_NAME_MAP, STRENGTH_MAP, EMOTION_COLOR_MAP
 from crud import emo_calendar as emo_calendar_crud
 from crud import emotion as emotion_crud
-from schemas import EmotionSeqScoreDto
-from services.mission_service import MissionService
 import logging
 from typing import AsyncGenerator
-import asyncio
-from services.emo_arduino_service import ArduinoService
+
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
-HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
+HISTORY_LIMIT = 5 # 최근 대화 내역 저장 개수
 
 logger = logging. getLogger(__name__)
 client = get_openai_client()
@@ -28,7 +22,6 @@ class ChatbotService:
     def __init__(self, db: Session):
         self.db = db
         self.client = get_openai_client()
-        self.mission_service = MissionService
 
     async def get_chat_history(self, member_seq: int, limit: int = None) -> list[ChatHistoryDto]:
         '''
@@ -45,7 +38,7 @@ class ChatbotService:
             chat_history = await redis_client.lrange(key, -limit, -1)
 
         chat_history_list = [ChatHistoryDto(**json.loads(history)) for history in chat_history]
-
+        logger.debug(f"챗 히스토리 : {chat_history}")
         # for item in chat_history_list:
         #     logger.info(f"{item}")
         return chat_history_list
@@ -101,9 +94,10 @@ class ChatbotService:
                 context,
                 "ai"
             )
-            return EmotionSeqScoreDto(
+            return EmotionSeqScoreAndCalendarDetailTitleDto(
                 emotion_seq=most_common_emotion_seq,
-                emotion_score=avg_emotion_score
+                emotion_score=avg_emotion_score,
+                title=title
             )
         except Exception as e:
             logger.error(f"대화 요약 저장 실패 : {e}")
@@ -131,12 +125,12 @@ class ChatbotService:
         logger.info(f"💬 대화 내역 저장 : {recode_json}")
 
     # TODO : redis 관련 로직들 분리 할지 고민..
-    def delete_chat_history(self, member_seq: int):
+    async def delete_chat_history(self, member_seq: int):
         '''사용자 상태 삭제 - 현재 대화 내역
         '''
         key = REDIS_CHAT_HISTORY_KEY.format(member_seq)
-        redis_client.delete(key)
-        logger.info(f"💬 대화 내역 삭제 : {key}")
+        result = await redis_client.delete(key) # 1이면 삭제 완료
+        logger.info(f"💬 대화 내역 삭제 : {key}, 결과 : {result}")
 
     def build_emotion_prompt(self, user_message: str):
         '''사용자 메시지에 따른 감정 분류

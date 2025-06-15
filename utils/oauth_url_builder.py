@@ -1,5 +1,8 @@
 import urllib.parse
 from services.oauth_service import OAuthConfig
+import logging
+
+logger = logging.getLogger(__name__)
 
 class OAuthLoginURLBuilder:
     """OAuth 로그인 URL 생성을 담당하는 클래스"""
@@ -7,6 +10,7 @@ class OAuthLoginURLBuilder:
     @staticmethod
     def build_google_url() -> str:
         """Google OAuth 로그인 URL 생성"""
+        logger.warning(f"🚨🚨🚨{OAuthConfig.Google.REDIRECT_URI}")
         params = {
             "client_id": OAuthConfig.Google.CLIENT_ID,
             "redirect_uri": OAuthConfig.Google.REDIRECT_URI,
@@ -15,6 +19,9 @@ class OAuthLoginURLBuilder:
             "access_type": "offline",
             "prompt": "consent"  # refresh_token 발급을 위해 필요
         }
+
+        logger.info(f"✨✨✨https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}")
+
         return f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
 
     @staticmethod

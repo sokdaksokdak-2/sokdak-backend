@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from crud import mission as mission_crud
-from schemas.mission import CreateMissionRequestDto
+from schemas import CreateMissionRequestDto
 
 
 class MissionService:

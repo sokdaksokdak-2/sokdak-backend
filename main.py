@@ -1,5 +1,5 @@
 # main.py
-from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from api import api_router
 from contextlib import asynccontextmanager
@@ -22,13 +22,21 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://sokdak.kro.kr"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ✅ 하나의 api_router로 모든 라우터 묶어서 등록 (단일 진입점)
 
 # 각 라우터를 FastAPI 앱에 포함
 
 app.include_router(api_router, prefix="/api")
 
-# ✅ 루트 테스트용 경로만 유지
-@app.get("/")
-def root():
-    return {"message": "chatbot api"}
+# # ✅ 루트 테스트용 경로만 유지
+# @app.get("/")
+# def root():
+#     return {"message": "sokdak api"}

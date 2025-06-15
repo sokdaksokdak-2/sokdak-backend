@@ -32,6 +32,8 @@ def oauth_login(provider: str):
 
     url_builder = OAuthLoginURLBuilder()
 
+    logger.info(f"🚨🚨🚨🚨url_builder.build_google_url()")
+
     if provider == "google":
         return RedirectResponse(url_builder.build_google_url())
     elif provider == "kakao":
@@ -58,7 +60,7 @@ def oauth_login(provider: str):
             )
 async def oauth_callback(provider: str, request: Request, oauth_service: OAuthService = Depends(get_oauth_service)):
     # 기존 응답 받아오기 (JSON 형태)
-    print("✅✅callback진입")
+    logger.info("✅callback진입")
     login_data = await oauth_service.handle_oauth_callback(request, provider)
 
     if isinstance(login_data, JSONResponse):
@@ -73,7 +75,7 @@ async def oauth_callback(provider: str, request: Request, oauth_service: OAuthSe
         f"&nickname={login_data.nickname}"
         f"&email={login_data.email}"
     )
-    logger.info(redirect_url)
+    logger.info(f"✅✅딥링크 : {redirect_url}")
  
     return RedirectResponse(url=redirect_url)
     # return login_data

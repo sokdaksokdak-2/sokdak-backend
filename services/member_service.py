@@ -2,7 +2,7 @@
 
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
-from schemas.member import RegisterRequestDto, UpdateCharacterNameRequestDto, UpdateNicknameRequestDto
+from schemas import RegisterRequestDto, UpdateNicknameRequestDto
 from sqlalchemy.orm import Session
 from crud import member as member_crud
 from crud import member_oauth as member_oauth_crud

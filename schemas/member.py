@@ -5,10 +5,6 @@ class RegisterRequestDto(BaseModel):
     email: EmailStr
     password: str
 
-class UpdateCharacterNameRequestDto(BaseModel):
-    member_seq: int
-    character_name: str
-
 class UpdateNicknameRequestDto(BaseModel):
     member_seq: int
     nickname: str
