@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from crud.emo_calendar import (
     get_strongest_emotions_by_month, get_emotions_by_date,
     update_emotion_calendar, create_emotion_calendar, delete_emotion_calendar,
-    get_monthly_emotion_stats, get_monthly_contexts
+     get_monthly_contexts
 )
+from crud.emo_report import get_monthly_emotion_stats
 from utils.emo_cal import calculate_emotion_distribution
 
 def get_monthly_summary(db: Session, member_seq: int, year: int, month: int):

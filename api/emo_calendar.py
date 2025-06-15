@@ -74,7 +74,7 @@ def create_calendar_entry_api(
 ):
     """
     감정 기록 직접 작성 API
-    - request: 감정, 제목, 메모, 날짜 등의 데이터
+    - request: member_seq, 감정, 제목, 메모, 날짜 등의 데이터
     - 반환: 생성된 calendar_seq 및 성공 메시지
     """
     result = create_calendar_entry(db, request)

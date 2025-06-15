@@ -22,11 +22,11 @@ class EmotionCalendarUpdateRequest(BaseModel):
 
 
 class EmotionCalendarCreateRequest(BaseModel): # 추가
+    member_seq: int  # ✅ 추가
     calendar_date: date
     title: str
     context: str
     emotion_seq: int
-
 
 class EmotionCalendarFromTextRequest(BaseModel):
     member_seq: int
