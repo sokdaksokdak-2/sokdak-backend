@@ -8,7 +8,7 @@ from .emo_arduino import EmotionChangeRequest
 
 from .emotion import EmotionDto, EmotionSeqScoreDto
 
-from .member_mission import MemberMissionResponseDto, MissionSuggestionDto, MemberMissionSimpleDto
+from .member_mission import MemberMissionResponseDto, MissionSuggestionDto, MemberMissionSimpleDto, MissionAcceptRequestDto
 
 from .chatbot import ChatHistoryDto, ChatRequestDto, ChatResponseDto, StreamingChatRequestDto, EmotionAnalysisResponseDto
 

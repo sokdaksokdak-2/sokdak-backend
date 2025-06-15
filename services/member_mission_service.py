@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from crud import member_mission as member_mission_crud
-from schemas import MemberMissionResponseDto, MissionSuggestionDto, MemberMissionSimpleDto
+from schemas import MemberMissionResponseDto, MissionSuggestionDto, MemberMissionSimpleDto, MissionAcceptRequestDto
 from datetime import date
 import logging
 import random
@@ -12,7 +12,7 @@ class MemberMissionService:
     def __init__(self, db: Session):
         self.db = db
     
-    def create_member_mission(self, member_seq: int, request: MissionSuggestionDto):
+    def create_member_mission(self, member_seq: int, request: MissionAcceptRequestDto):
         "미션 수락 시 맴버미션 테이블에 저장"
         # 6. 미션 레코드 생성 (내부에서 commit까지 하지 않게 해두는 게 좋음)
         member_mission = member_mission_crud.create_member_mission_record(
@@ -58,7 +58,8 @@ class MemberMissionService:
                 emotion_seq=emotion_seq,
                 emotion_score=emotion_score,
                 mission_seq=selected_mission.mission_seq,
-                title=diary_title
+                title=diary_title,
+                content=selected_mission.content,
             )
         except SQLAlchemyError as e:
             self.db.rollback()
@@ -97,7 +98,7 @@ class MemberMissionService:
         except Exception as e:
             logger.error(f"최근 미션 조회 중 예외 발생: {str(e)}")
             raise Exception("미션 조회 중 오류가 발생했습니다.")
-    # TODO : 고치는중
+
     def get_all_mission(self, member_seq: int):
         """
         사용자의 전체 미션 목록 조회 - 날짜 내림차순
