@@ -20,7 +20,7 @@ class MemberMissionService:
         )
 
         self.db.commit()  # 수동 커밋
-        self.db.refresh(member_mission)  # 커밋 후 refresh
+        # self.db.refresh(member_mission)  # 커밋 후 refresh
 
     def propose_mission(self, member_seq: int, emotion_seq: int, emotion_score: int, diary_title: str):
         """
