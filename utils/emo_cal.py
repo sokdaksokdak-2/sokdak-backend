@@ -9,10 +9,10 @@ emotion_mapping = {
 
 def calculate_emotion_distribution(stats):
     """
-    감정별 (name_kr, emotion_score, count) 리스트를 받아
-    영어 감정명 기준 비율 딕셔너리로 변환합니다.
-    - stats: [(name_kr, emotion_score, count), ...]
-    - 반환: {감정영문명: 비율(float)}
+    감정별 (emotion_seq, emotion_score, count) 리스트를 받아
+    emotion_seq 기준 비율 딕셔너리로 변환합니다.
+    - stats: [(emotion_seq, emotion_score, count), ...]
+    - 반환: {emotion_seq: 비율(float)}
     """
     if not isinstance(stats, list) or not stats:
         return {}
@@ -21,18 +21,16 @@ def calculate_emotion_distribution(stats):
     total = 0
 
     for item in stats:
-        # 잘못된 데이터 방지
         if not isinstance(item, (list, tuple)) or len(item) != 3:
             continue
 
-        name_kr, score, count = item
-        eng_name = emotion_mapping.get(name_kr)
-        if eng_name and isinstance(score, (int, float)) and isinstance(count, int):
+        emotion_seq, score, count = item
+        if isinstance(emotion_seq, int) and isinstance(score, (int, float)) and isinstance(count, int):
             weighted = score * count
-            score_sum[eng_name] = score_sum.get(eng_name, 0) + weighted
+            score_sum[emotion_seq] = score_sum.get(emotion_seq, 0) + weighted
             total += weighted
 
     if total == 0:
         return {}
 
-    return {emotion: round(weight / total, 4) for emotion, weight in score_sum.items()}
+    return {emotion_seq: round(weight / total, 4) for emotion_seq, weight in score_sum.items()}
