@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from sqlalchemy.orm import Session
 from db.session import get_session
 from schemas import (
@@ -54,12 +54,15 @@ def read_emo_calendar(
 def update_calendar_entry_api(
     detail_seq: int,
     update_data: EmotionCalendarUpdateRequest,
-    member_seq: int,  # 로그인 사용자 ID (Depends로 주입받을 수 있음)
-    db: Session = Depends(get_session)
+    member_seq: int = Query(...),           # 또는 Depends(get_current_user)
+    db: Session = Depends(get_session),
 ):
-    updated = update_calendar_entry(db, detail_seq, member_seq, update_data)
-    if not updated:
-        raise HTTPException(status_code=404, detail="수정 권한이 없거나 존재하지 않는 감정 기록입니다.")
+    ok = update_calendar_entry(db, detail_seq, member_seq, update_data)
+    if not ok:
+        raise HTTPException(
+            status_code=404,
+            detail="수정 권한이 없거나 존재하지 않는 감정 기록입니다.",
+        )
     return {"message": "감정 기록이 성공적으로 수정되었습니다."}
 
 
@@ -77,21 +80,19 @@ def create_calendar_entry_api(
     - request: member_seq, 감정, 제목, 메모, 날짜 등의 데이터
     - 반환: 생성된 calendar_seq 및 성공 메시지
     """
-    result = create_calendar_entry(db, request)
+    calendar, detail = create_calendar_entry(db, request)
     return {
-        "calendar_seq": result.calendar_seq,
-        "calendar_date": result.calendar_date,
-        "member_seq": result.member_seq,
-        "title": request.title,
-        "context": request.context,
-        "emotion_seq": request.emotion_seq
-
-
+        "detail_seq": detail.detail_seq,               # ✅ 올바르게 접근
+        "calendar_date": calendar.calendar_date,
+        "member_seq": calendar.member_seq,
+        "title": detail.title,
+        "context": detail.context,
+        "emotion_seq": detail.emotion_seq
     }
 
 
-# 5. 캘린더 내용 삭제  (calendar_seq 기준)
-@router.delete("/{calendar_seq}")
+# 5. 캘린더 내용 삭제  (detail_seq 기준)
+@router.delete("/delete/{detail_seq}")
 def delete_calendar_entry_api(
     detail_seq: int,
     member_seq: int,

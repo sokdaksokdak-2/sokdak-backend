@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from db.session import get_session
 from services import ChatbotService, MissionService, MemberMissionService
-from schemas.chatbot import StreamingChatRequestDto, ChatRequestDto, ChatResponseDto
+from schemas import StreamingChatRequestDto, ChatRequestDto, ChatResponseDto, MissionSuggestionDto
 import logging
 import time
 from datetime import datetime
@@ -27,6 +27,7 @@ def get_member_mission_service(db: Session = Depends(get_session)) -> MemberMiss
 # 앱 첫 실행시에는 상큼이 출현, 이후 대화에서는 분석 결과에 따라 캐릭터 변경
 # 앱 실행 시 유저 있는지 확인 후 없으면 상큼이 출현
 
+# TODO : endpoint 수정 -> members/1/chatbot으로 수정할듯?@router.post("/members/{member_seq}/chat/complete")
 @router.post("/chat",
              summary="챗봇 대화 - 이전 대화 반영 ",
              )
@@ -45,6 +46,7 @@ async def chat_message( request: ChatRequestDto, chatbot_service: ChatbotService
 @router.post("/complete/{member_seq}",
                 summary="대화 종료 후 챗봇 내용 요약 및 미션생성",
                 status_code=200,
+                response_model=MissionSuggestionDto
             )
 async def complete_chat_session(background_tasks: BackgroundTasks,
                                 member_seq: int,
@@ -56,11 +58,13 @@ async def complete_chat_session(background_tasks: BackgroundTasks,
     diary = await chatbot_service.save_chat_diary(member_seq, chat_history)
     if diary is None:
         raise HTTPException(status_code=404, detail="저장할 내용이 없음")
-    member_mission = member_mission_service.create_member_mission(member_seq, diary.emotion_seq, diary.emotion_score)
+    suggestion_mission = member_mission_service.propose_mission(member_seq, diary.emotion_seq, diary.emotion_score, diary.title)
+
+    logger.info(f"🥹🥹🥹미션 제안 응답 : {suggestion_mission}")
 
     background_tasks.add_task(chatbot_service.delete_chat_history, member_seq)
     
-    return member_mission
+    return suggestion_mission
 
 # @router.post("/stream",
 #              summary="챗봇 대화 - 이전 대화 기억 못함",

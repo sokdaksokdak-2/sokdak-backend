@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date
 from typing import Optional
 
@@ -7,21 +7,27 @@ class EmotionCalendarSummaryResponse(BaseModel):
     emotion_seq: Optional[int]
 
 class EmotionCalendarResponse(BaseModel):
-    emotion_seq: Optional[int]
-    context: Optional[str]
+    detail_seq: int
+    emotion_seq: int
+    title: str
+    context: str
     calendar_date: date
-    
+
     class Config:
         orm_mode = True
 
 
-class EmotionCalendarUpdateRequest(BaseModel): 
-    context: Optional[str] = None
-    title: Optional[str] = None
-    emotion_seq: Optional[int] = None  # 감정 변경을 위한 필드
+class EmotionCalendarUpdateRequest(BaseModel):
+    emotion_seq: int | None = Field(None, ge=1, le=5)   # 1‒5 중 선택
+    title: str | None = None
+    context: str | None = None                          # 메모(내용)
+
+    class Config:
+        orm_mode = True
 
 
 class EmotionCalendarCreateRequest(BaseModel): # 추가
+
     member_seq: int  # ✅ 추가
     calendar_date: date
     title: str
@@ -36,10 +42,14 @@ class EmotionCalendarFromTextRequest(BaseModel):
 
 ### 추가
 class CalendarCreateResponse(BaseModel):
-    calendar_seq: int
+    detail_seq: int
     calendar_date: date
     member_seq: int
     title: str
     context: str
     emotion_seq: int
 
+class EmotionSeqScoreAndCalendarDetailTitleDto(BaseModel):
+    emotion_seq: int
+    emotion_score: int
+    title: str
