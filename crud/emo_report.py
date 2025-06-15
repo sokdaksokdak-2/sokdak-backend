@@ -28,9 +28,9 @@ def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, en
     try:
         result = (
             db.query(
-                EmotionCalendarDetail.emotion_seq,
+                EmotionCalendarDetail.emotion_seq.label("emotion_seq"),
                 func.sum(EmotionCalendarDetail.emotion_score).label("score_sum"),
-                func.count().label("count")
+                func.count(EmotionCalendarDetail.detail_seq).label("count")
             )
             .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
             .filter(
@@ -39,6 +39,7 @@ def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, en
                 EmotionCalendar.calendar_date <= end_date
             )
             .group_by(EmotionCalendarDetail.emotion_seq)
+            .order_by(func.sum(EmotionCalendarDetail.emotion_score).desc())  # optional: 점수 내림차순
             .all()
         )
         return result or []

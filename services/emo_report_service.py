@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 from crud.emo_report import (
     get_emotion_report, save_emotion_report,
     get_monthly_emotion_stats, get_monthly_contexts
@@ -25,6 +26,10 @@ def create_emotion_report(db: Session, member_seq: int, today: date) -> EmotionR
     # 1. 감정 raw 데이터 쿼리 → 비율 계산
     stats = get_monthly_emotion_stats(db, member_seq, start_date, end_date)
     emotion_distribution = calculate_emotion_distribution(stats)
+
+    if not emotion_distribution:
+        # 감정 기록이 하나도 없으면 예외 발생
+        raise HTTPException(status_code=404, detail="이 달의 감정 기록이 없습니다.")
 
     # 2. 감정 메모 context 쿼리 (주석 처리)
     # context_texts = get_monthly_contexts(db, member_seq, start_date, end_date)
