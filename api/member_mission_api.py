@@ -52,8 +52,8 @@ def get_all_missions_by_member(
     missions = member_mission_service.get_all_mission(member_seq)
     logger.info(f"사용자으 전체 미션 목록 : {missions}")
 
-    if not missions:
-        raise HTTPException(status_code=404, detail="미션 기록이 없습니다.")
+    # if not missions:
+    #     raise HTTPException(status_code=404, detail="미션 기록이 없습니다.")
     return missions
 
 @router.get("/members/{member_seq}/missions/date", 
