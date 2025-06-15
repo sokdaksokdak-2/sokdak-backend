@@ -13,7 +13,7 @@ import logging
 from typing import AsyncGenerator
 
 REDIS_CHAT_HISTORY_KEY = "chat_history:{}"
-HISTORY_LIMIT = 3 # 최근 대화 내역 저장 개수
+HISTORY_LIMIT = 5 # 최근 대화 내역 저장 개수
 
 logger = logging. getLogger(__name__)
 client = get_openai_client()
@@ -125,12 +125,12 @@ class ChatbotService:
         logger.info(f"💬 대화 내역 저장 : {recode_json}")
 
     # TODO : redis 관련 로직들 분리 할지 고민..
-    def delete_chat_history(self, member_seq: int):
+    async def delete_chat_history(self, member_seq: int):
         '''사용자 상태 삭제 - 현재 대화 내역
         '''
         key = REDIS_CHAT_HISTORY_KEY.format(member_seq)
-        redis_client.delete(key)
-        logger.info(f"💬 대화 내역 삭제 : {key}")
+        result = await redis_client.delete(key) # 1이면 삭제 완료
+        logger.info(f"💬 대화 내역 삭제 : {key}, 결과 : {result}")
 
     def build_emotion_prompt(self, user_message: str):
         '''사용자 메시지에 따른 감정 분류
