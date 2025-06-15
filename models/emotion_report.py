@@ -10,7 +10,7 @@ class EmotionReport(SQLModel, table=True):
     report_id: int = Field(primary_key=True)
     report_date: date = Field(nullable=False, description="해당 리포트가 속한 월 (예: 2025-05-01)")
     summary_text: Optional[str] = Field(default=None)
-    created_at: Optional[datetime] = Field(default=None)
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
     member_seq: int = Field(nullable=False, description="회원 시퀀스")
 
 # JSON 타입 명시
