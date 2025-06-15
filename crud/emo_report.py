@@ -23,43 +23,25 @@ def save_emotion_report(db: Session, report: EmotionReport):
     return report
 
 def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, end_date: date):
-    """
-    전달 월의 감정별 (emotion_seq, 강도, count) raw 데이터를 반환합니다.
-    
-    Parameters:
-    - db: SQLAlchemy 세션 객체
-    - member_seq: 회원 식별 번호
-    - start_date: 조회 시작일
-    - end_date: 조회 종료일
-
-    Returns:
-    - [(emotion_seq, emotion_score, count), ...] 형태의 리스트 반환
-    """
-
-    from sqlalchemy import func  # 집계 함수를 사용하기 위해 func를 import
+    from sqlalchemy import func
 
     try:
-        EmotionAlias = aliased(Emotion)
-        EmotionDetailAlias = aliased(EmotionCalendarDetail)
-
         result = (
             db.query(
-                EmotionAlias.emotion_seq,
-                EmotionDetailAlias.emotion_score,
+                EmotionCalendarDetail.emotion_seq,
+                func.sum(EmotionCalendarDetail.emotion_score).label("score_sum"),
                 func.count().label("count")
             )
-            .join(EmotionCalendarDetail, EmotionCalendarDetail.emotion_seq == EmotionAlias.emotion_seq)
             .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
-            .join(EmotionDetailAlias, Emotion.emotion_seq == EmotionDetailAlias.emotion_seq) 
             .filter(
                 EmotionCalendar.member_seq == member_seq,
                 EmotionCalendar.calendar_date >= start_date,
                 EmotionCalendar.calendar_date <= end_date
             )
-            .group_by(EmotionAlias.emotion_seq, EmotionDetailAlias.emotion_score)
+            .group_by(EmotionCalendarDetail.emotion_seq)
             .all()
         )
-        return result or []  # ← 쿼리 결과가 없으면 빈 리스트 반환
+        return result or []
     except Exception as e:
         print(f"[ERROR] Failed to fetch emotion stats: {e}")
         return []
