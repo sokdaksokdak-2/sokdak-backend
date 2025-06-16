@@ -33,7 +33,8 @@ def create_or_read_emotion_report(
         raise HTTPException(status_code=400, detail="유효하지 않은 연도 또는 월입니다.")
 
     # 리포트 생성(또는 이미 있으면 반환)
+    # services.emo_report_service.create_emotion_report 에서 이미 모든 로직을 처리
     report = create_emotion_report(db, req.member_seq, report_month)
-    if not report:
-        raise HTTPException(status_code=404, detail="이 달의 리포트가 존재하지 않습니다.")
+    
+    # services에서 이미 기록 없는 경우 404를 발생시키므로 여기서는 단순 반환
     return report

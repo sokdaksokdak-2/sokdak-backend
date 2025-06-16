@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, aliased
 from models.emotion_report import EmotionReport
-from models import EmotionCalendarDetail, EmotionCalendar, Emotion
+from models import EmotionCalendarDetail, EmotionCalendar, Emotion, EmotionDetail
 from datetime import date
 
 def get_emotion_report(db: Session, member_seq: int, report_date: date):
@@ -32,21 +32,26 @@ def get_monthly_emotion_stats(db: Session, member_seq: int, start_date: date, en
                 func.sum(EmotionCalendarDetail.emotion_score).label("score_sum"),
                 func.count(EmotionCalendarDetail.detail_seq).label("count")
             )
-            .join(EmotionCalendar, EmotionCalendarDetail.calendar_seq == EmotionCalendar.calendar_seq)
+            .join(EmotionCalendar, EmotionCalendar.calendar_seq == EmotionCalendarDetail.calendar_seq)
             .filter(
                 EmotionCalendar.member_seq == member_seq,
                 EmotionCalendar.calendar_date >= start_date,
                 EmotionCalendar.calendar_date <= end_date
             )
-            .group_by(EmotionCalendarDetail.emotion_seq)
-            .order_by(func.sum(EmotionCalendarDetail.emotion_score).desc())  # optional: 점수 내림차순
+            .group_by(
+                EmotionCalendarDetail.emotion_seq
+            )
+            .order_by(
+                EmotionCalendarDetail.emotion_seq.desc()
+            )
             .all()
         )
-        return result or []
+        # 반환값을 [(emotion_seq, score_sum, count), ...] 형태로 맞춤
+        return [(row.emotion_seq, row.score_sum, row.count) for row in result] if result else []
     except Exception as e:
         print(f"[ERROR] Failed to fetch emotion stats: {e}")
         return []
-
+    
 
 def get_monthly_contexts(db: Session, member_seq: int, start_date: date, end_date: date):
     """
