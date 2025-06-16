@@ -74,6 +74,7 @@ async def oauth_callback(provider: str, request: Request, oauth_service: OAuthSe
         f"&member_seq={login_data.member_seq}"
         f"&nickname={login_data.nickname}"
         f"&email={login_data.email}"
+        f"&provider={provider}"
     )
     logger.info(f"✅✅딥링크 : {redirect_url}")
  
