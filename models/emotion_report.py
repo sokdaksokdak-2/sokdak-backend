@@ -17,5 +17,5 @@ class EmotionReport(SQLModel, table=True):
     emotion_distribution: Optional[dict] = Field(
         default=None,
         sa_column=Column(JSON),
-        description='(예: { "1": 0.4, "2": 0.2, ... }) / emotion_seq별 비율'
+        description='(예: { 1 : 0.4, 2 : 0.2, ... }) / emotion_seq별 비율'
     )

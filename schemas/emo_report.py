@@ -6,7 +6,6 @@ from pydantic import BaseModel
 class EmotionReportResponse(BaseModel):
     report_date: date  # 예: 2025-05-01 (5월 리포트)
     emotion_distribution: Dict[int, float]  # 감정별 비율
-    # summary_text: Optional[str] = None
     created_at: datetime
 
     class Config:
