@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 def register_member(db: Session, email: str, password: str) :
-    member = Member(email=email, password=password, nickname=email)
+    member = Member(email=email, password=password)
     db.add(member)
     db.commit()
     db.refresh(member)
